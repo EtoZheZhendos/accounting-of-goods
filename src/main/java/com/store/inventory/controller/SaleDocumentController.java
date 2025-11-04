@@ -240,23 +240,22 @@ public class SaleDocumentController {
             Warehouse warehouse = warehouseCombo.getValue();
             String customer = customerField.getText().trim();
 
-            // Создаём документ
-            Document document = saleService.createSaleDocument(
-                docNumber, docDate, warehouse, customer, "Система"
-            );
-
-            // Добавляем строки
+            // Преобразуем строки в формат для сервиса
+            java.util.List<com.store.inventory.service.SaleService.SaleItemData> items = 
+                new java.util.ArrayList<>();
+            
             for (SaleLine line : saleLines) {
-                saleService.addSaleItem(
-                    document, 
+                items.add(new com.store.inventory.service.SaleService.SaleItemData(
                     line.getItem(),
                     line.getQuantity(),
                     line.getSalePrice()
-                );
+                ));
             }
 
-            // Проводим документ
-            saleService.confirmSaleDocument(document, "Система");
+            // Создаём и проводим документ в одной транзакции
+            saleService.createAndConfirmSaleDocument(
+                docNumber, docDate, warehouse, customer, items, "Система"
+            );
 
             saved = true;
             closeDialog();

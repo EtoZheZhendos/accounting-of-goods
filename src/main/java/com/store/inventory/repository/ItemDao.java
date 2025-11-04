@@ -94,6 +94,29 @@ public class ItemDao extends GenericDao<Item, Long> {
             throw new RuntimeException("Ошибка при подсчёте: " + e.getMessage(), e);
         }
     }
+    
+    /**
+     * Получить остатки товаров с разбивкой по складам
+     * @return список объектов [nomenclature, warehouse, quantity]
+     */
+    public List<Object[]> getStockByWarehouse() {
+        try (Session session = getSession()) {
+            String hql = """
+                SELECT i.nomenclature, s.warehouse, SUM(i.quantity)
+                FROM Item i
+                JOIN i.currentShelf s
+                JOIN s.warehouse
+                WHERE i.status = 'IN_STOCK' AND i.quantity > 0
+                GROUP BY i.nomenclature, s.warehouse
+                ORDER BY i.nomenclature.article, s.warehouse.name
+                """;
+            Query<Object[]> query = session.createQuery(hql, Object[].class);
+            return query.list();
+        } catch (Exception e) {
+            logger.error("Ошибка при получении остатков по складам", e);
+            throw new RuntimeException("Ошибка при получении остатков: " + e.getMessage(), e);
+        }
+    }
 
     /**
      * Получить просроченные товары
@@ -137,9 +160,12 @@ public class ItemDao extends GenericDao<Item, Long> {
     public List<Item> findAvailableByNomenclatureAndWarehouse(Nomenclature nomenclature, com.store.inventory.domain.Warehouse warehouse) {
         try (Session session = getSession()) {
             String hql = """
-                FROM Item i
+                SELECT i FROM Item i
+                LEFT JOIN FETCH i.nomenclature
+                LEFT JOIN FETCH i.currentShelf s
+                LEFT JOIN FETCH s.warehouse
                 WHERE i.nomenclature = :nomenclature
-                AND i.currentShelf.warehouse = :warehouse
+                AND s.warehouse = :warehouse
                 AND i.status = 'IN_STOCK'
                 AND i.quantity > 0
                 ORDER BY i.createdAt

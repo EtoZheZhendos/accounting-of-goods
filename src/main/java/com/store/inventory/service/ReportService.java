@@ -25,7 +25,7 @@ public class ReportService {
     private final HistoryDao historyDao = new HistoryDao();
 
     /**
-     * Получить остатки товаров на складе
+     * Получить остатки товаров на складе (общие, без разбивки по складам)
      */
     public Map<Nomenclature, BigDecimal> getStockReport() {
         Map<Nomenclature, BigDecimal> stockReport = new HashMap<>();
@@ -41,6 +41,14 @@ public class ReportService {
         }
 
         return stockReport;
+    }
+    
+    /**
+     * Получить остатки товаров с разбивкой по складам
+     * @return список объектов [nomenclature, warehouse, quantity]
+     */
+    public List<Object[]> getStockReportByWarehouse() {
+        return itemDao.getStockByWarehouse();
     }
 
     /**

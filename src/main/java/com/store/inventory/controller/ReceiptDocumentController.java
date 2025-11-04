@@ -197,15 +197,12 @@ public class ReceiptDocumentController {
             Warehouse warehouse = warehouseCombo.getValue();
             String supplier = supplierField.getText().trim();
 
-            // Создаём документ
-            Document document = receiptService.createReceiptDocument(
-                docNumber, docDate, warehouse, supplier, "Система"
-            );
-
-            // Добавляем строки
+            // Преобразуем строки в формат для сервиса
+            java.util.List<com.store.inventory.service.ReceiptService.ReceiptItemData> items = 
+                new java.util.ArrayList<>();
+            
             for (ReceiptLine line : receiptLines) {
-                receiptService.addReceiptItem(
-                    document, 
+                items.add(new com.store.inventory.service.ReceiptService.ReceiptItemData(
                     line.getNomenclature(),
                     line.getQuantity(),
                     line.getPurchasePrice(),
@@ -214,11 +211,13 @@ public class ReceiptDocumentController {
                     line.getBatchNumber(),
                     LocalDate.now(),
                     line.getExpiryDate()
-                );
+                ));
             }
 
-            // Проводим документ
-            receiptService.confirmReceiptDocument(document, "Система");
+            // Создаём и проводим документ в одной транзакции
+            receiptService.createAndConfirmReceiptDocument(
+                docNumber, docDate, warehouse, supplier, items, "Система"
+            );
 
             saved = true;
             closeDialog();

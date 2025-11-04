@@ -3,19 +3,23 @@ package com.store.inventory.controller;
 import com.store.inventory.domain.*;
 import com.store.inventory.repository.*;
 import com.store.inventory.service.MovementService;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.CheckBoxTableCell;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Контроллер диалога перемещения товаров между полками
+ * Контроллер диалога перемещения товаров между складами
  */
 public class MovementDialogController {
 
@@ -24,256 +28,304 @@ public class MovementDialogController {
     @FXML private TextField documentNumberField;
     @FXML private DatePicker documentDatePicker;
     @FXML private ComboBox<Nomenclature> nomenclatureCombo;
-    @FXML private ComboBox<Item> itemCombo;
-    @FXML private Label availableQuantityLabel;
-    @FXML private TextField quantityField;
-    @FXML private ComboBox<Shelf> sourceShelfCombo;
-    @FXML private ComboBox<Shelf> targetCurrentShelfCombo;
-    @FXML private TextArea commentArea;
-    @FXML private Button saveButton;
-    @FXML private Button cancelButton;
+    @FXML private TableView<ItemRow> itemsTable;
+    @FXML private TableColumn<ItemRow, String> colArticle;
+    @FXML private TableColumn<ItemRow, String> colName;
+    @FXML private TableColumn<ItemRow, String> colBatch;
+    @FXML private TableColumn<ItemRow, String> colWarehouse;
+    @FXML private TableColumn<ItemRow, BigDecimal> colQuantity;
+    @FXML private TableColumn<ItemRow, Boolean> colSelect;
+    @FXML private ComboBox<Warehouse> targetWarehouseCombo;
+    @FXML private javafx.scene.layout.VBox targetShelfBox;
+    @FXML private ComboBox<Shelf> targetShelfCombo;
 
     private final NomenclatureDao nomenclatureDao = new NomenclatureDao();
     private final ItemDao itemDao = new ItemDao();
+    private final WarehouseDao warehouseDao = new WarehouseDao();
     private final ShelfDao shelfDao = new ShelfDao();
     private final MovementService movementService = new MovementService();
 
-    private boolean saved = false;
-
+    /**
+     * Инициализация контроллера
+     */
     @FXML
     public void initialize() {
-        documentDatePicker.setValue(LocalDate.now());
+        logger.info("Инициализация диалога перемещения");
         
-        loadNomenclatures();
-        loadShelves();
-
-        // Обработчики изменений
-        nomenclatureCombo.setOnAction(e -> updateItems());
-        itemCombo.setOnAction(e -> updateAvailableQuantity());
+        setupTableColumns();
+        loadNomenclature();
+        loadWarehouses();
+        
+        documentDatePicker.setValue(java.time.LocalDate.now());
+        generateDocumentNumber();
+    }
+    
+    /**
+     * Генерация номера документа
+     */
+    private void generateDocumentNumber() {
+        String number = "ПЕР-" + System.currentTimeMillis();
+        documentNumberField.setText(number);
     }
 
-    private void loadNomenclatures() {
-        var nomenclatures = nomenclatureDao.findAll();
-        nomenclatureCombo.setItems(FXCollections.observableArrayList(nomenclatures));
+    /**
+     * Настройка колонок таблицы
+     */
+    private void setupTableColumns() {
+        colArticle.setCellValueFactory(new PropertyValueFactory<>("article"));
+        colName.setCellValueFactory(new PropertyValueFactory<>("name"));
+        colBatch.setCellValueFactory(new PropertyValueFactory<>("batchNumber"));
+        colWarehouse.setCellValueFactory(new PropertyValueFactory<>("warehouseName"));
+        colQuantity.setCellValueFactory(new PropertyValueFactory<>("quantity"));
         
-        nomenclatureCombo.setCellFactory(lv -> new ListCell<>() {
-            @Override
-            protected void updateItem(Nomenclature item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty || item == null ? "" : item.getArticle() + " - " + item.getName());
-            }
-        });
-        
-        nomenclatureCombo.setButtonCell(new ListCell<>() {
-            @Override
-            protected void updateItem(Nomenclature item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty || item == null ? "" : item.getArticle() + " - " + item.getName());
-            }
-        });
+        colSelect.setCellValueFactory(cellData -> cellData.getValue().selectedProperty());
+        colSelect.setCellFactory(CheckBoxTableCell.forTableColumn(colSelect));
+        itemsTable.setEditable(true);
     }
 
-    private void loadShelves() {
-        var shelves = shelfDao.findAll();
-        var shelfList = FXCollections.observableArrayList(shelves);
-        
-        sourceShelfCombo.setItems(shelfList);
-        targetCurrentShelfCombo.setItems(shelfList);
-        
-        ListCell<Shelf> shelfCellFactory = new ListCell<>() {
-            @Override
-            protected void updateItem(Shelf item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText("");
-                } else {
-                    setText(item.getCode() + " (" + item.getWarehouse().getName() + ")");
-                }
-            }
-        };
-        
-        sourceShelfCombo.setCellFactory(lv -> shelfCellFactory);
-        sourceShelfCombo.setButtonCell(new ListCell<>() {
-            @Override
-            protected void updateItem(Shelf item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText("");
-                } else {
-                    setText(item.getCode() + " (" + item.getWarehouse().getName() + ")");
-                }
-            }
-        });
-        
-        targetCurrentShelfCombo.setCellFactory(lv -> new ListCell<>() {
-            @Override
-            protected void updateItem(Shelf item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText("");
-                } else {
-                    setText(item.getCode() + " (" + item.getWarehouse().getName() + ")");
-                }
-            }
-        });
-        
-        targetCurrentShelfCombo.setButtonCell(new ListCell<>() {
-            @Override
-            protected void updateItem(Shelf item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText("");
-                } else {
-                    setText(item.getCode() + " (" + item.getWarehouse().getName() + ")");
-                }
-            }
-        });
-    }
-
-    private void updateItems() {
-        Nomenclature nomenclature = nomenclatureCombo.getValue();
-        
-        if (nomenclature != null) {
-            List<Item> items = itemDao.findByNomenclature(nomenclature);
+    /**
+     * Загрузка номенклатуры
+     */
+    private void loadNomenclature() {
+        try {
+            List<Nomenclature> nomenclatures = nomenclatureDao.findAll();
+            nomenclatureCombo.setItems(FXCollections.observableArrayList(nomenclatures));
             
-            itemCombo.setItems(FXCollections.observableArrayList(items));
-            
-            itemCombo.setCellFactory(lv -> new ListCell<>() {
+            nomenclatureCombo.setCellFactory(lv -> new ListCell<>() {
                 @Override
-                protected void updateItem(Item item, boolean empty) {
+                protected void updateItem(Nomenclature item, boolean empty) {
                     super.updateItem(item, empty);
-                    if (empty || item == null) {
-                        setText("");
-                    } else {
-                        String text = String.format("Партия: %s, Полка: %s (остаток: %.2f)", 
-                            item.getBatchNumber(), 
-                            item.getCurrentShelf().getCode(),
-                            item.getQuantity());
-                        setText(text);
-                    }
+                    setText(empty || item == null ? "" : 
+                        item.getArticle() + " - " + item.getName());
                 }
             });
             
-            itemCombo.setButtonCell(new ListCell<>() {
+            nomenclatureCombo.setButtonCell(new ListCell<>() {
                 @Override
-                protected void updateItem(Item item, boolean empty) {
+                protected void updateItem(Nomenclature item, boolean empty) {
                     super.updateItem(item, empty);
-                    if (empty || item == null) {
-                        setText("");
-                    } else {
-                        String text = String.format("Партия: %s, Полка: %s (остаток: %.2f)", 
-                            item.getBatchNumber(), 
-                            item.getCurrentShelf().getCode(),
-                            item.getQuantity());
-                        setText(text);
-                    }
+                    setText(empty || item == null ? "" : 
+                        item.getArticle() + " - " + item.getName());
+                }
+            });
+        } catch (Exception e) {
+            logger.error("Ошибка при загрузке номенклатуры", e);
+            showError("Ошибка", "Не удалось загрузить номенклатуру: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Загрузка складов
+     */
+    private void loadWarehouses() {
+        try {
+            List<Warehouse> warehouses = warehouseDao.findAllActive();
+            targetWarehouseCombo.setItems(FXCollections.observableArrayList(warehouses));
+            
+            targetWarehouseCombo.setCellFactory(lv -> new ListCell<>() {
+                @Override
+                protected void updateItem(Warehouse item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? "" : item.getName());
                 }
             });
             
-            if (!items.isEmpty()) {
-                itemCombo.setValue(items.get(0));
-                updateAvailableQuantity();
-            }
-        } else {
-            itemCombo.setItems(FXCollections.observableArrayList());
-            availableQuantityLabel.setText("Доступно: 0");
+            targetWarehouseCombo.setButtonCell(new ListCell<>() {
+                @Override
+                protected void updateItem(Warehouse item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? "" : item.getName());
+                }
+            });
+        } catch (Exception e) {
+            logger.error("Ошибка при загрузке складов", e);
+            showError("Ошибка", "Не удалось загрузить склады: " + e.getMessage());
         }
     }
 
-    private void updateAvailableQuantity() {
-        Item item = itemCombo.getValue();
-        if (item != null) {
-            availableQuantityLabel.setText(String.format("Доступно: %.2f", item.getQuantity()));
-            sourceShelfCombo.setValue(item.getCurrentShelf());
-        } else {
-            availableQuantityLabel.setText("Доступно: 0");
-        }
-    }
-
+    /**
+     * Обработка выбора склада-приёмника
+     */
     @FXML
-    private void handleSave() {
-        if (!validateInput()) {
+    public void handleTargetWarehouseSelected() {
+        Warehouse warehouse = targetWarehouseCombo.getValue();
+        if (warehouse == null) {
+            targetShelfBox.setVisible(false);
+            targetShelfBox.setManaged(false);
+            targetShelfCombo.getItems().clear();
             return;
         }
-
+        
         try {
-            String docNumber = documentNumberField.getText().trim();
-            LocalDate docDate = documentDatePicker.getValue();
-            Item item = itemCombo.getValue();
-            BigDecimal quantity = new BigDecimal(quantityField.getText().trim());
-            Shelf targetCurrentShelf = targetCurrentShelfCombo.getValue();
-            String comment = commentArea.getText().trim();
-
-            // Проверка количества
-            if (quantity.compareTo(item.getQuantity()) > 0) {
-                showError("Ошибка", "Недостаточно товара. Доступно: " + item.getQuantity());
-                return;
+            List<Shelf> shelves = shelfDao.findByWarehouse(warehouse);
+            targetShelfCombo.setItems(FXCollections.observableArrayList(shelves));
+            
+            targetShelfCombo.setCellFactory(lv -> new ListCell<>() {
+                @Override
+                protected void updateItem(Shelf item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty || item == null) {
+                        setText("");
+                    } else {
+                        String text = item.getCode();
+                        if (item.getDescription() != null && !item.getDescription().isEmpty()) {
+                            text += " - " + item.getDescription();
+                        }
+                        setText(text);
+                    }
+                }
+            });
+            
+            targetShelfCombo.setButtonCell(new ListCell<>() {
+                @Override
+                protected void updateItem(Shelf item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty || item == null) {
+                        setText("");
+                    } else {
+                        String text = item.getCode();
+                        if (item.getDescription() != null && !item.getDescription().isEmpty()) {
+                            text += " - " + item.getDescription();
+                        }
+                        setText(text);
+                    }
+                }
+            });
+            
+            if (!shelves.isEmpty()) {
+                targetShelfCombo.setValue(shelves.get(0));
             }
-
-            // Проверка, что целевая полка отличается от исходной
-            if (item.getCurrentShelf().equals(targetCurrentShelf)) {
-                showError("Ошибка", "Целевая полка должна отличаться от исходной");
-                return;
-            }
-
-            // Выполняем перемещение
-            movementService.moveItem(
-                docNumber, 
-                docDate, 
-                item, 
-                quantity, 
-                targetCurrentShelf, 
-                comment,
-                "Система"
-            );
-
-            saved = true;
-            closeDialog();
-
+            
+            targetShelfBox.setVisible(true);
+            targetShelfBox.setManaged(true);
+            
         } catch (Exception e) {
-            logger.error("Ошибка при перемещении товара", e);
+            logger.error("Ошибка при загрузке полок", e);
+            showError("Ошибка", "Не удалось загрузить полки: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Обработка выбора номенклатуры
+     */
+    @FXML
+    public void handleNomenclatureSelected() {
+        Nomenclature selected = nomenclatureCombo.getValue();
+        if (selected == null) {
+            itemsTable.getItems().clear();
+            return;
+        }
+        
+        try {
+            List<Item> items = itemDao.findByNomenclature(selected);
+            List<ItemRow> rows = new ArrayList<>();
+            
+            for (Item item : items) {
+                if (item.getStatus() == ItemStatus.IN_STOCK && 
+                    item.getQuantity().compareTo(BigDecimal.ZERO) > 0) {
+                    
+                    String warehouseName = item.getCurrentShelf() != null && 
+                                          item.getCurrentShelf().getWarehouse() != null ?
+                        item.getCurrentShelf().getWarehouse().getName() : "Неизвестно";
+                    
+                    rows.add(new ItemRow(
+                        item,
+                        item.getNomenclature().getArticle(),
+                        item.getNomenclature().getName(),
+                        item.getBatchNumber(),
+                        warehouseName,
+                        item.getQuantity()
+                    ));
+                }
+            }
+            
+            itemsTable.setItems(FXCollections.observableArrayList(rows));
+            logger.info("Загружено позиций: {}", rows.size());
+            
+        } catch (Exception e) {
+            logger.error("Ошибка при загрузке позиций", e);
+            showError("Ошибка", "Не удалось загрузить позиции: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Обработка перемещения
+     */
+    @FXML
+    public void handleMove() {
+        try {
+            String documentNumber = documentNumberField.getText();
+            if (documentNumber == null || documentNumber.trim().isEmpty()) {
+                showWarning("Предупреждение", "Укажите номер документа");
+                return;
+            }
+            
+            java.time.LocalDate documentDate = documentDatePicker.getValue();
+            if (documentDate == null) {
+                showWarning("Предупреждение", "Укажите дату документа");
+                return;
+            }
+            
+            List<ItemRow> selectedRows = itemsTable.getItems().stream()
+                .filter(ItemRow::isSelected)
+                .toList();
+            
+            if (selectedRows.isEmpty()) {
+                showWarning("Предупреждение", "Выберите позиции для перемещения");
+                return;
+            }
+            
+            Shelf targetShelf = targetShelfCombo.getValue();
+            if (targetShelf == null) {
+                showWarning("Предупреждение", "Выберите полку-приёмник");
+                return;
+            }
+            
+            Item firstItem = selectedRows.get(0).getItem();
+            Warehouse sourceWarehouse = firstItem.getCurrentShelf().getWarehouse();
+            
+            java.util.List<MovementService.MovementItemData> itemsData = new java.util.ArrayList<>();
+            for (ItemRow row : selectedRows) {
+                itemsData.add(new MovementService.MovementItemData(row.getItem(), targetShelf));
+            }
+            
+            Document document = movementService.createAndConfirmMovementDocument(
+                documentNumber.trim(),
+                documentDate,
+                sourceWarehouse,
+                itemsData,
+                "Пользователь"
+            );
+            
+            showInfo("Успех", 
+                "Документ перемещения " + documentNumber + " успешно создан и проведён");
+            closeDialog();
+            
+        } catch (Exception e) {
+            logger.error("Ошибка при перемещении", e);
             showError("Ошибка", "Не удалось выполнить перемещение: " + e.getMessage());
         }
     }
 
+    /**
+     * Обработка отмены
+     */
     @FXML
-    private void handleCancel() {
+    public void handleCancel() {
         closeDialog();
     }
 
-    private boolean validateInput() {
-        if (documentNumberField.getText().trim().isEmpty()) {
-            showError("Ошибка ввода", "Введите номер документа");
-            return false;
-        }
-        if (documentDatePicker.getValue() == null) {
-            showError("Ошибка ввода", "Выберите дату документа");
-            return false;
-        }
-        if (nomenclatureCombo.getValue() == null) {
-            showError("Ошибка ввода", "Выберите номенклатуру");
-            return false;
-        }
-        if (itemCombo.getValue() == null) {
-            showError("Ошибка ввода", "Выберите товарную позицию");
-            return false;
-        }
-        if (quantityField.getText().trim().isEmpty()) {
-            showError("Ошибка ввода", "Введите количество");
-            return false;
-        }
-        if (targetCurrentShelfCombo.getValue() == null) {
-            showError("Ошибка ввода", "Выберите целевую полку");
-            return false;
-        }
-        return true;
-    }
-
+    /**
+     * Закрытие диалога
+     */
     private void closeDialog() {
-        Stage stage = (Stage) saveButton.getScene().getWindow();
+        Stage stage = (Stage) nomenclatureCombo.getScene().getWindow();
         stage.close();
     }
 
+    /**
+     * Показ ошибки
+     */
     private void showError(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle(title);
@@ -282,8 +334,60 @@ public class MovementDialogController {
         alert.showAndWait();
     }
 
-    public boolean isSaved() {
-        return saved;
+    /**
+     * Показ предупреждения
+     */
+    private void showWarning(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    /**
+     * Показ информации
+     */
+    private void showInfo(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    /**
+     * Класс для представления строки позиции в таблице
+     */
+    public static class ItemRow {
+        private final Item item;
+        private final String article;
+        private final String name;
+        private final String batchNumber;
+        private final String warehouseName;
+        private final BigDecimal quantity;
+        private final BooleanProperty selected;
+
+        public ItemRow(Item item, String article, String name, String batchNumber, 
+                      String warehouseName, BigDecimal quantity) {
+            this.item = item;
+            this.article = article;
+            this.name = name;
+            this.batchNumber = batchNumber;
+            this.warehouseName = warehouseName;
+            this.quantity = quantity;
+            this.selected = new SimpleBooleanProperty(false);
+        }
+
+        public Item getItem() { return item; }
+        public String getArticle() { return article; }
+        public String getName() { return name; }
+        public String getBatchNumber() { return batchNumber; }
+        public String getWarehouseName() { return warehouseName; }
+        public BigDecimal getQuantity() { return quantity; }
+        
+        public BooleanProperty selectedProperty() { return selected; }
+        public boolean isSelected() { return selected.get(); }
+        public void setSelected(boolean value) { selected.set(value); }
     }
 }
-

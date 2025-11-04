@@ -67,11 +67,40 @@
                         <Button text="Обновить" onAction="#loadStockData"/>
                     </HBox>
 
+                    <!-- Панель фильтров -->
+                    <VBox spacing="10" styleClass="filter-panel">
+                        <HBox spacing="15" alignment="CENTER_LEFT">
+                            <VBox spacing="5" HBox.hgrow="ALWAYS" maxWidth="300">
+                                <Label text="Склад:"/>
+                                <ComboBox fx:id="filterWarehouseCombo" promptText="Все склады" 
+                                         maxWidth="Infinity" onAction="#applyStockFilter"/>
+                            </VBox>
+                            
+                            <VBox spacing="5" HBox.hgrow="ALWAYS" maxWidth="300">
+                                <Label text="Артикул:"/>
+                                <TextField fx:id="filterArticleField" promptText="Поиск по артикулу"
+                                          maxWidth="Infinity" onKeyReleased="#applyStockFilter"/>
+                            </VBox>
+                            
+                            <VBox spacing="5" HBox.hgrow="ALWAYS" maxWidth="300">
+                                <Label text="Название:"/>
+                                <TextField fx:id="filterNameField" promptText="Поиск по названию"
+                                          maxWidth="Infinity" onKeyReleased="#applyStockFilter"/>
+                            </VBox>
+                            
+                            <VBox spacing="5" alignment="BOTTOM_LEFT">
+                                <Label text=" "/> <!-- Пустой label для выравнивания -->
+                                <Button text="Очистить" onAction="#clearStockFilters" prefWidth="100"/>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+
                     <TableView fx:id="stockTable" VBox.vgrow="ALWAYS">
                         <columns>
                             <TableColumn fx:id="stockArticleCol" text="Артикул" prefWidth="120"/>
-                            <TableColumn fx:id="stockNameCol" text="Наименование" prefWidth="300"/>
-                            <TableColumn fx:id="stockManufacturerCol" text="Производитель" prefWidth="200"/>
+                            <TableColumn fx:id="stockNameCol" text="Наименование" prefWidth="250"/>
+                            <TableColumn fx:id="stockManufacturerCol" text="Производитель" prefWidth="180"/>
+                            <TableColumn fx:id="stockWarehouseCol" text="Склад" prefWidth="150"/>
                             <TableColumn fx:id="stockQuantityCol" text="Количество" prefWidth="120"/>
                             <TableColumn fx:id="stockUnitCol" text="Ед. изм." prefWidth="100"/>
                         </columns>
@@ -115,9 +144,8 @@
                     <HBox spacing="10" alignment="CENTER_LEFT">
                         <Label text="Документы движения товаров" styleClass="header-label"/>
                         <Region HBox.hgrow="ALWAYS"/>
-                        <Button text="Создать"/>
-                        <Button text="Открыть"/>
-                        <Button text="Удалить"/>
+                        <Button text="Открыть" onAction="#handleOpenDocument"/>
+                        <Button text="Удалить" onAction="#handleDeleteDocument"/>
                     </HBox>
 
                     <TableView fx:id="documentTable" VBox.vgrow="ALWAYS">

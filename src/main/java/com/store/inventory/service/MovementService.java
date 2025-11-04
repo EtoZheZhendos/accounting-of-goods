@@ -87,8 +87,14 @@ public class MovementService {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             transaction = session.beginTransaction();
 
-            // Получаем строки документа
-            List<DocumentItem> items = documentItemDao.findByDocument(document);
+            // Присоединяем документ к текущей сессии
+            document = session.merge(document);
+
+            // Получаем строки документа через текущую сессию
+            String hql = "FROM DocumentItem WHERE document = :document";
+            List<DocumentItem> items = session.createQuery(hql, DocumentItem.class)
+                    .setParameter("document", document)
+                    .list();
 
             if (items.isEmpty()) {
                 throw new IllegalStateException("Нельзя провести пустой документ");
@@ -96,7 +102,7 @@ public class MovementService {
 
             // Обрабатываем каждую строку
             for (DocumentItem docItem : items) {
-                Item item = docItem.getItem();
+                Item item = session.merge(docItem.getItem());
 
                 if (item == null) {
                     throw new IllegalStateException("Товарная позиция не найдена");
@@ -200,12 +206,10 @@ public class MovementService {
     public void moveItem(String documentNumber, java.time.LocalDate documentDate, 
                         Item item, java.math.BigDecimal quantity, 
                         Shelf targetShelf, String comment, String performedBy) {
-        // Проверяем количество
         if (quantity.compareTo(item.getQuantity()) > 0) {
             throw new IllegalArgumentException("Недостаточно товара для перемещения");
         }
 
-        // Создаем документ
         Document document = createMovementDocument(
             documentNumber, 
             documentDate, 
@@ -213,11 +217,109 @@ public class MovementService {
             performedBy
         );
 
-        // Добавляем товар в документ
         addMovementItem(document, item, targetShelf);
 
-        // Проводим документ
         confirmMovementDocument(document, performedBy);
+    }
+    
+    /**
+     * Простое перемещение товара на другой склад
+     */
+    public void moveItem(Item item, Shelf targetShelf) {
+        moveItemToShelf(item, targetShelf, "Система");
+    }
+    
+    /**
+     * Создать и провести документ перемещения в одной транзакции
+     */
+    public Document createAndConfirmMovementDocument(String documentNumber, LocalDate documentDate,
+                                                     Warehouse sourceWarehouse, 
+                                                     java.util.List<MovementItemData> items,
+                                                     String performedBy) {
+        Transaction transaction = null;
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
+
+            sourceWarehouse = session.merge(sourceWarehouse);
+
+            Document document = new Document(
+                DocumentType.MOVEMENT,
+                documentNumber,
+                documentDate,
+                sourceWarehouse,
+                null,
+                DocumentStatus.DRAFT,
+                performedBy
+            );
+            document = session.merge(document);
+
+            for (MovementItemData itemData : items) {
+                Item item = session.merge(itemData.item);
+                Shelf targetShelf = session.merge(itemData.targetShelf);
+                
+                if (item.getCurrentShelf().equals(targetShelf)) {
+                    logger.warn("Товар {} уже находится на полке {}", item.getId(), targetShelf.getId());
+                    continue;
+                }
+
+                DocumentItem documentItem = new DocumentItem(
+                    document,
+                    item.getNomenclature(),
+                    item.getQuantity(),
+                    BigDecimal.ZERO,
+                    targetShelf
+                );
+                documentItem.setItem(item);
+                documentItem = session.merge(documentItem);
+
+                Shelf fromShelf = item.getCurrentShelf();
+                item.setCurrentShelf(targetShelf);
+                item = session.merge(item);
+
+                History history = new History(
+                    item,
+                    document,
+                    OperationType.MOVEMENT,
+                    null,
+                    null,
+                    fromShelf,
+                    targetShelf,
+                    item.getStatus(),
+                    item.getStatus(),
+                    performedBy,
+                    "Перемещение: " + fromShelf.getFullAddress() + " → " + targetShelf.getFullAddress()
+                );
+                session.merge(history);
+            }
+
+            document.setStatus(DocumentStatus.CONFIRMED);
+            document = session.merge(document);
+
+            transaction.commit();
+            logger.info("Документ перемещения {} успешно создан и проведён", documentNumber);
+
+            return document;
+
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+            logger.error("Ошибка при создании документа перемещения", e);
+            throw new RuntimeException("Ошибка при создании документа: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Класс для передачи данных о перемещаемой позиции
+     */
+    public static class MovementItemData {
+        public final Item item;
+        public final Shelf targetShelf;
+        
+        public MovementItemData(Item item, Shelf targetShelf) {
+            this.item = item;
+            this.targetShelf = targetShelf;
+        }
     }
 }
 

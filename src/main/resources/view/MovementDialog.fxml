@@ -7,91 +7,67 @@
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.store.inventory.controller.MovementDialogController"
-      spacing="15" styleClass="dialog-content" prefWidth="700">
+      spacing="15" styleClass="dialog-content" prefWidth="700" prefHeight="600">
     
     <padding>
         <Insets top="20" right="20" bottom="20" left="20"/>
     </padding>
 
-    <Label text="Перемещение товара между полками" styleClass="dialog-header"/>
+    <Label text="Перемещение товара между складами" styleClass="dialog-header"/>
 
-    <!-- Шапка документа -->
     <TitledPane text="Реквизиты документа" collapsible="false">
         <GridPane hgap="10" vgap="10">
-            <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
             <columnConstraints>
-                <ColumnConstraints minWidth="120" prefWidth="120"/>
-                <ColumnConstraints minWidth="200" prefWidth="500" hgrow="ALWAYS"/>
+                <ColumnConstraints minWidth="150" prefWidth="150"/>
+                <ColumnConstraints minWidth="200" prefWidth="250" hgrow="ALWAYS"/>
             </columnConstraints>
 
-            <Label text="Номер*:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-            <TextField fx:id="documentNumberField" promptText="ПР-00001" 
-                       GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+            <Label text="Номер документа:*" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+            <TextField fx:id="documentNumberField" promptText="Введите номер" 
+                      GridPane.rowIndex="0" GridPane.columnIndex="1"/>
 
-            <Label text="Дата*:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+            <Label text="Дата документа:*" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
             <DatePicker fx:id="documentDatePicker" 
-                        GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+                       GridPane.rowIndex="1" GridPane.columnIndex="1" maxWidth="Infinity"/>
         </GridPane>
     </TitledPane>
 
-    <!-- Выбор товара -->
-    <TitledPane text="Товар для перемещения" collapsible="false">
-        <GridPane hgap="10" vgap="10">
-            <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
-            <columnConstraints>
-                <ColumnConstraints minWidth="120" prefWidth="120"/>
-                <ColumnConstraints minWidth="200" prefWidth="500" hgrow="ALWAYS"/>
-            </columnConstraints>
+    <VBox spacing="10">
+        <Label text="1. Выберите номенклатуру:" style="-fx-font-weight: bold;"/>
+        <ComboBox fx:id="nomenclatureCombo" promptText="Выберите товар" 
+                  maxWidth="Infinity" onAction="#handleNomenclatureSelected"/>
+    </VBox>
 
-            <Label text="Номенклатура*:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-            <ComboBox fx:id="nomenclatureCombo" prefWidth="500"
-                      GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+    <VBox spacing="10">
+        <Label text="2. Выберите позиции для перемещения:" style="-fx-font-weight: bold;"/>
+        <TableView fx:id="itemsTable" VBox.vgrow="ALWAYS" prefHeight="200">
+            <columns>
+                <TableColumn fx:id="colArticle" text="Артикул" prefWidth="100"/>
+                <TableColumn fx:id="colName" text="Наименование" prefWidth="150"/>
+                <TableColumn fx:id="colBatch" text="Партия" prefWidth="80"/>
+                <TableColumn fx:id="colWarehouse" text="Склад (источник)" prefWidth="120"/>
+                <TableColumn fx:id="colQuantity" text="Количество" prefWidth="80"/>
+                <TableColumn fx:id="colSelect" text="Выбрать" prefWidth="60"/>
+            </columns>
+        </TableView>
+    </VBox>
 
-            <Label text="Товарная позиция*:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-            <VBox spacing="5" GridPane.rowIndex="1" GridPane.columnIndex="1">
-                <ComboBox fx:id="itemCombo" prefWidth="500"/>
-                <Label fx:id="availableQuantityLabel" text="Доступно: 0" 
-                       style="-fx-font-weight: bold; -fx-text-fill: #27ae60;"/>
-            </VBox>
+    <VBox spacing="10">
+        <Label text="3. Выберите склад-приёмник:" style="-fx-font-weight: bold;"/>
+        <ComboBox fx:id="targetWarehouseCombo" promptText="Выберите склад назначения" 
+                  maxWidth="Infinity" onAction="#handleTargetWarehouseSelected"/>
+    </VBox>
+    
+    <VBox spacing="10" fx:id="targetShelfBox" visible="false" managed="false">
+        <Label text="4. Выберите полку-приёмник:" style="-fx-font-weight: bold;"/>
+        <ComboBox fx:id="targetShelfCombo" promptText="Выберите полку" 
+                  maxWidth="Infinity"/>
+    </VBox>
 
-            <Label text="Количество*:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-            <TextField fx:id="quantityField" promptText="10"
-                       GridPane.rowIndex="2" GridPane.columnIndex="1"/>
-        </GridPane>
-    </TitledPane>
+    <Separator/>
 
-    <!-- Полки -->
-    <TitledPane text="Перемещение" collapsible="false">
-        <GridPane hgap="10" vgap="10">
-            <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
-            <columnConstraints>
-                <ColumnConstraints minWidth="120" prefWidth="120"/>
-                <ColumnConstraints minWidth="200" prefWidth="500" hgrow="ALWAYS"/>
-            </columnConstraints>
-
-            <Label text="Исходная полка:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-            <ComboBox fx:id="sourceShelfCombo" disable="true" prefWidth="500"
-                      GridPane.rowIndex="0" GridPane.columnIndex="1"/>
-
-            <Label text="Целевая полка*:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
-            <ComboBox fx:id="targetShelfCombo" prefWidth="500"
-                      GridPane.rowIndex="1" GridPane.columnIndex="1"/>
-
-            <Label text="Комментарий:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
-            <TextArea fx:id="commentArea" promptText="Причина перемещения..." 
-                      prefRowCount="3" wrapText="true"
-                      GridPane.rowIndex="2" GridPane.columnIndex="1"/>
-        </GridPane>
-    </TitledPane>
-
-    <Label text="* - обязательные поля" styleClass="hint-label"/>
-
-    <!-- Кнопки -->
     <HBox spacing="10" alignment="CENTER_RIGHT">
-        <Button fx:id="saveButton" text="Выполнить перемещение" onAction="#handleSave" 
-                styleClass="primary-button" defaultButton="true"/>
-        <Button fx:id="cancelButton" text="Отмена" onAction="#handleCancel" 
-                cancelButton="true"/>
+        <Button text="Переместить" onAction="#handleMove" styleClass="primary-button" prefWidth="120"/>
+        <Button text="Отмена" onAction="#handleCancel" prefWidth="100"/>
     </HBox>
 </VBox>
-

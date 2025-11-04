@@ -35,17 +35,30 @@ public class MainWindowController {
 
     // FXML элементы - Вкладка "Остатки"
     @FXML
-    private TableView<NomenclatureStock> stockTable;
+    private TableView<StockReportItem> stockTable;
     @FXML
-    private TableColumn<NomenclatureStock, String> stockArticleCol;
+    private TableColumn<StockReportItem, String> stockArticleCol;
     @FXML
-    private TableColumn<NomenclatureStock, String> stockNameCol;
+    private TableColumn<StockReportItem, String> stockNameCol;
     @FXML
-    private TableColumn<NomenclatureStock, String> stockManufacturerCol;
+    private TableColumn<StockReportItem, String> stockManufacturerCol;
     @FXML
-    private TableColumn<NomenclatureStock, BigDecimal> stockQuantityCol;
+    private TableColumn<StockReportItem, String> stockWarehouseCol;
     @FXML
-    private TableColumn<NomenclatureStock, String> stockUnitCol;
+    private TableColumn<StockReportItem, BigDecimal> stockQuantityCol;
+    @FXML
+    private TableColumn<StockReportItem, String> stockUnitCol;
+    
+    // Фильтры для остатков
+    @FXML
+    private ComboBox<Warehouse> filterWarehouseCombo;
+    @FXML
+    private TextField filterArticleField;
+    @FXML
+    private TextField filterNameField;
+    
+    // Данные для фильтрации
+    private ObservableList<StockReportItem> allStockData = FXCollections.observableArrayList();
 
     // FXML элементы - Вкладка "Номенклатура"
     @FXML
@@ -98,6 +111,7 @@ public class MainWindowController {
             initializeNomenclatureTable();
             initializeDocumentTable();
             initializeWarehouseTable();
+            initializeStockFilters();
 
             loadAllData();
 
@@ -109,6 +123,31 @@ public class MainWindowController {
             showError("Ошибка инициализации", e.getMessage());
         }
     }
+    
+    /**
+     * Инициализация фильтров остатков
+     */
+    private void initializeStockFilters() {
+        // Загружаем склады для фильтра
+        List<Warehouse> warehouses = warehouseDao.findAllActive();
+        filterWarehouseCombo.setItems(FXCollections.observableArrayList(warehouses));
+        
+        filterWarehouseCombo.setCellFactory(lv -> new ListCell<>() {
+            @Override
+            protected void updateItem(Warehouse item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? "" : item.getName());
+            }
+        });
+        
+        filterWarehouseCombo.setButtonCell(new ListCell<>() {
+            @Override
+            protected void updateItem(Warehouse item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? "Все склады" : item.getName());
+            }
+        });
+    }
 
     /**
      * Инициализация таблицы остатков
@@ -117,6 +156,7 @@ public class MainWindowController {
         stockArticleCol.setCellValueFactory(new PropertyValueFactory<>("article"));
         stockNameCol.setCellValueFactory(new PropertyValueFactory<>("name"));
         stockManufacturerCol.setCellValueFactory(new PropertyValueFactory<>("manufacturer"));
+        stockWarehouseCol.setCellValueFactory(new PropertyValueFactory<>("warehouse"));
         stockQuantityCol.setCellValueFactory(new PropertyValueFactory<>("quantity"));
         stockUnitCol.setCellValueFactory(new PropertyValueFactory<>("unit"));
     }
@@ -177,27 +217,93 @@ public class MainWindowController {
     @FXML
     public void loadStockData() {
         try {
-            Map<Nomenclature, BigDecimal> stockReport = reportService.getStockReport();
-            ObservableList<NomenclatureStock> stockList = FXCollections.observableArrayList();
+            List<Object[]> stockReport = reportService.getStockReportByWarehouse();
+            allStockData.clear();
 
-            stockReport.forEach((nom, qty) -> {
+            for (Object[] row : stockReport) {
+                Nomenclature nom = (Nomenclature) row[0];
+                Warehouse warehouse = (Warehouse) row[1];
+                BigDecimal qty = (BigDecimal) row[2];
+                
                 String manufacturerName = nom.getManufacturer() != null ? nom.getManufacturer().getName() : "";
-                stockList.add(new NomenclatureStock(
+                String warehouseName = warehouse != null ? warehouse.getName() : "";
+                
+                allStockData.add(new StockReportItem(
                         nom.getArticle(),
                         nom.getName(),
                         manufacturerName,
+                        warehouseName,
                         qty,
                         nom.getUnit()
                 ));
-            });
+            }
 
-            stockTable.setItems(stockList);
-            logger.info("Загружено остатков: {}", stockList.size());
+            applyStockFilter();
+            logger.info("Загружено остатков: {}", allStockData.size());
 
         } catch (Exception e) {
             logger.error("Ошибка при загрузке остатков", e);
             showError("Ошибка загрузки", e.getMessage());
         }
+    }
+    
+    /**
+     * Применение фильтров к остаткам
+     */
+    @FXML
+    public void applyStockFilter() {
+        if (allStockData == null || allStockData.isEmpty()) {
+            return;
+        }
+        
+        String articleFilter = filterArticleField != null && filterArticleField.getText() != null ? 
+                filterArticleField.getText().toLowerCase().trim() : "";
+        String nameFilter = filterNameField != null && filterNameField.getText() != null ? 
+                filterNameField.getText().toLowerCase().trim() : "";
+        Warehouse warehouseFilter = filterWarehouseCombo != null ? filterWarehouseCombo.getValue() : null;
+        
+        ObservableList<StockReportItem> filteredData = FXCollections.observableArrayList();
+        
+        for (StockReportItem stock : allStockData) {
+            boolean matches = true;
+            
+            // Фильтр по артикулу
+            if (!articleFilter.isEmpty() && 
+                (stock.getArticle() == null || !stock.getArticle().toLowerCase().contains(articleFilter))) {
+                matches = false;
+            }
+            
+            // Фильтр по названию
+            if (!nameFilter.isEmpty() && 
+                (stock.getName() == null || !stock.getName().toLowerCase().contains(nameFilter))) {
+                matches = false;
+            }
+            
+            // Фильтр по складу
+            if (warehouseFilter != null && 
+                (stock.getWarehouse() == null || !stock.getWarehouse().equals(warehouseFilter.getName()))) {
+                matches = false;
+            }
+            
+            if (matches) {
+                filteredData.add(stock);
+            }
+        }
+        
+        stockTable.setItems(filteredData);
+        statusLabel.setText(String.format("Найдено позиций: %d из %d", filteredData.size(), allStockData.size()));
+    }
+    
+    /**
+     * Очистка фильтров остатков
+     */
+    @FXML
+    public void clearStockFilters() {
+        if (filterArticleField != null) filterArticleField.clear();
+        if (filterNameField != null) filterNameField.clear();
+        if (filterWarehouseCombo != null) filterWarehouseCombo.setValue(null);
+        applyStockFilter();
+        statusLabel.setText("Фильтры очищены");
     }
 
     /**
@@ -469,13 +575,136 @@ public class MainWindowController {
     }
 
     /**
+     * Создать новый документ (универсальная кнопка)
+     */
+    @FXML
+    public void handleCreateDocument() {
+        // Показываем меню выбора типа документа
+        javafx.scene.control.ContextMenu menu = new javafx.scene.control.ContextMenu();
+        
+        javafx.scene.control.MenuItem receiptItem = new javafx.scene.control.MenuItem("Поступление");
+        receiptItem.setOnAction(e -> handleCreateReceiptDocument());
+        
+        javafx.scene.control.MenuItem saleItem = new javafx.scene.control.MenuItem("Реализация");
+        saleItem.setOnAction(e -> handleCreateSaleDocument());
+        
+        javafx.scene.control.MenuItem movementItem = new javafx.scene.control.MenuItem("Перемещение");
+        movementItem.setOnAction(e -> handleCreateMovementDocument());
+        
+        menu.getItems().addAll(receiptItem, saleItem, movementItem);
+        
+        // Показываем меню у кнопки "Создать"
+        javafx.scene.Node source = (javafx.scene.Node) documentTable.getScene().lookup(".button");
+        if (source != null) {
+            javafx.geometry.Bounds bounds = source.localToScreen(source.getBoundsInLocal());
+            menu.show(source, bounds.getMinX(), bounds.getMaxY());
+        }
+    }
+
+    /**
+     * Открыть выбранный документ
+     */
+    @FXML
+    public void handleOpenDocument() {
+        Document selected = documentTable.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showWarning("Выберите документ", "Пожалуйста, выберите документ для открытия");
+            return;
+        }
+
+        showInfo("Просмотр документа", 
+            String.format("Документ: %s\nТип: %s\nДата: %s\nСтатус: %s\nСумма: %.2f руб.",
+                selected.getDocumentNumber(),
+                translateDocumentType(selected.getDocumentType()),
+                selected.getDocumentDate(),
+                translateDocumentStatus(selected.getStatus()),
+                selected.getTotalAmount()
+            ));
+    }
+
+    /**
+     * Удалить выбранный документ
+     */
+    @FXML
+    public void handleDeleteDocument() {
+        Document selected = documentTable.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showWarning("Выберите документ", "Пожалуйста, выберите документ для удаления");
+            return;
+        }
+
+        if (selected.getStatus() == DocumentStatus.CONFIRMED) {
+            showWarning("Невозможно удалить", "Нельзя удалить проведенный документ. Сначала отмените проведение.");
+            return;
+        }
+
+        if (confirmDelete("документ", selected.getDocumentNumber())) {
+            try {
+                documentDao.delete(selected);
+                loadDocumentData();
+                statusLabel.setText("Документ удалён");
+            } catch (Exception e) {
+                logger.error("Ошибка при удалении документа", e);
+                showError("Ошибка удаления", "Не удалось удалить документ: " + e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Перевод типа документа
+     */
+    private String translateDocumentType(DocumentType type) {
+        if (type == null) return "Неизвестно";
+        return switch (type) {
+            case RECEIPT -> "Поступление";
+            case SALE -> "Реализация";
+            case MOVEMENT -> "Перемещение";
+            case WRITE_OFF -> "Списание";
+            default -> "Другое";
+        };
+    }
+
+    /**
+     * Перевод статуса документа
+     */
+    private String translateDocumentStatus(DocumentStatus status) {
+        if (status == null) return "Неизвестно";
+        return switch (status) {
+            case DRAFT -> "Черновик";
+            case CONFIRMED -> "Проведён";
+            case CANCELLED -> "Отменён";
+            default -> "Другое";
+        };
+    }
+
+    /**
+     * Показать информационное сообщение
+     */
+    private void showInfo(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    /**
      * Универсальный метод открытия диалога
      */
     private void openDialog(String fxmlPath, String title, Runnable onSuccess, String successMessage) {
         try {
-            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(
-                getClass().getResource(fxmlPath)
-            );
+            logger.info("Открытие диалога: {}", fxmlPath);
+            
+            // Используем ClassLoader для загрузки
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader();
+            loader.setLocation(getClass().getResource(fxmlPath));
+            
+            if (loader.getLocation() == null) {
+                logger.error("FXML файл не найден: {}", fxmlPath);
+                showError("Ошибка", "Файл диалога не найден: " + fxmlPath);
+                return;
+            }
+            
             javafx.scene.Parent root = loader.load();
 
             Object controller = loader.getController();
@@ -512,9 +741,18 @@ public class MainWindowController {
     private <T> void openDialogWithData(String fxmlPath, String title, T data, 
                                        Runnable onSuccess, String successMessage) {
         try {
-            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(
-                getClass().getResource(fxmlPath)
-            );
+            logger.info("Открытие диалога с данными: {}", fxmlPath);
+            
+            // Используем ClassLoader для загрузки
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader();
+            loader.setLocation(getClass().getResource(fxmlPath));
+            
+            if (loader.getLocation() == null) {
+                logger.error("FXML файл не найден: {}", fxmlPath);
+                showError("Ошибка", "Файл диалога не найден: " + fxmlPath);
+                return;
+            }
+            
             javafx.scene.Parent root = loader.load();
 
             Object controller = loader.getController();

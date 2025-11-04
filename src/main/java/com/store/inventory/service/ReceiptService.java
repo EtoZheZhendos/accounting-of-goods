@@ -74,6 +74,105 @@ public class ReceiptService {
     }
 
     /**
+     * Создать и провести документ поступления целиком (для UI)
+     */
+    public Document createAndConfirmReceiptDocument(String documentNumber, LocalDate documentDate,
+                                                    Warehouse warehouse, String supplier, 
+                                                    java.util.List<ReceiptItemData> items, 
+                                                    String performedBy) {
+        Transaction transaction = null;
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
+
+            // Присоединяем склад к сессии
+            warehouse = session.merge(warehouse);
+
+            // Создаём документ
+            Document document = new Document(
+                DocumentType.RECEIPT,
+                documentNumber,
+                documentDate,
+                warehouse,
+                supplier,
+                DocumentStatus.DRAFT,
+                performedBy
+            );
+            document = session.merge(document);
+
+            // Добавляем строки
+            for (ReceiptItemData itemData : items) {
+                Nomenclature nomenclature = session.merge(itemData.nomenclature);
+                Shelf shelf = session.merge(itemData.shelf);
+
+                // Создаём строку документа
+                DocumentItem documentItem = new DocumentItem(
+                    document,
+                    nomenclature,
+                    itemData.quantity,
+                    itemData.purchasePrice,
+                    shelf
+                );
+                documentItem = session.merge(documentItem);
+
+                // Создаём товарную позицию
+                Item item = new Item(
+                    nomenclature,
+                    itemData.batchNumber,
+                    itemData.quantity,
+                    itemData.purchasePrice,
+                    itemData.sellingPrice,
+                    shelf,
+                    ItemStatus.IN_STOCK
+                );
+                item.setManufactureDate(itemData.manufactureDate);
+                item.setExpiryDate(itemData.expiryDate);
+                item = session.merge(item);
+
+                // Связываем строку документа с товарной позицией
+                documentItem.setItem(item);
+                session.merge(documentItem);
+
+                // Записываем в историю
+                History history = new History(
+                    item,
+                    document,
+                    OperationType.RECEIPT,
+                    itemData.quantity,
+                    itemData.purchasePrice,
+                    null,
+                    shelf,
+                    null,
+                    ItemStatus.IN_STOCK,
+                    performedBy,
+                    "Поступление по документу " + documentNumber
+                );
+                session.merge(history);
+            }
+
+            // Вычисляем сумму вручную
+            String sumHql = "SELECT COALESCE(SUM(di.quantity * di.price), 0) FROM DocumentItem di WHERE di.document = :document";
+            BigDecimal totalAmount = session.createQuery(sumHql, BigDecimal.class)
+                    .setParameter("document", document)
+                    .uniqueResult();
+            document.setTotalAmount(totalAmount);
+            document.setStatus(DocumentStatus.CONFIRMED);
+            document = session.merge(document);
+
+            transaction.commit();
+            logger.info("Документ поступления {} успешно создан и проведён", documentNumber);
+
+            return document;
+
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+            logger.error("Ошибка при создании документа поступления", e);
+            throw new RuntimeException("Ошибка при создании документа: " + e.getMessage(), e);
+        }
+    }
+
+    /**
      * Провести документ поступления
      * Создаёт товарные позиции и записывает историю
      */
@@ -90,8 +189,14 @@ public class ReceiptService {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             transaction = session.beginTransaction();
 
-            // Получаем строки документа
-            List<DocumentItem> items = documentItemDao.findByDocument(document);
+            // Присоединяем документ к текущей сессии
+            document = session.merge(document);
+
+            // Получаем строки документа через текущую сессию
+            String hql = "FROM DocumentItem WHERE document = :document";
+            List<DocumentItem> items = session.createQuery(hql, DocumentItem.class)
+                    .setParameter("document", document)
+                    .list();
 
             if (items.isEmpty()) {
                 throw new IllegalStateException("Нельзя провести пустой документ");
@@ -212,6 +317,34 @@ public class ReceiptService {
             }
             logger.error("Ошибка при отмене документа поступления", e);
             throw new RuntimeException("Ошибка при отмене документа: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Вспомогательный класс для передачи данных строки поступления
+     */
+    public static class ReceiptItemData {
+        public Nomenclature nomenclature;
+        public BigDecimal quantity;
+        public BigDecimal purchasePrice;
+        public BigDecimal sellingPrice;
+        public Shelf shelf;
+        public String batchNumber;
+        public LocalDate manufactureDate;
+        public LocalDate expiryDate;
+
+        public ReceiptItemData(Nomenclature nomenclature, BigDecimal quantity, 
+                              BigDecimal purchasePrice, BigDecimal sellingPrice,
+                              Shelf shelf, String batchNumber, 
+                              LocalDate manufactureDate, LocalDate expiryDate) {
+            this.nomenclature = nomenclature;
+            this.quantity = quantity;
+            this.purchasePrice = purchasePrice;
+            this.sellingPrice = sellingPrice;
+            this.shelf = shelf;
+            this.batchNumber = batchNumber;
+            this.manufactureDate = manufactureDate;
+            this.expiryDate = expiryDate;
         }
     }
 }

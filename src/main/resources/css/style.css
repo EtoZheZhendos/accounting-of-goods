@@ -197,3 +197,23 @@
     -fx-background-color: white;
 }
 
+/* Панель фильтров */
+.filter-panel {
+    -fx-background-color: #ecf0f1;
+    -fx-padding: 15;
+    -fx-background-radius: 5;
+    -fx-border-color: #bdc3c7;
+    -fx-border-width: 1;
+    -fx-border-radius: 5;
+}
+
+.filter-panel .label {
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c3e50;
+}
+
+.filter-panel .combo-box,
+.filter-panel .text-field {
+    -fx-background-color: white;
+}
+

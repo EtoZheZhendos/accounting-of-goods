@@ -95,8 +95,14 @@ public class SaleService {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             transaction = session.beginTransaction();
 
-            // Получаем строки документа
-            List<DocumentItem> items = documentItemDao.findByDocument(document);
+            // Присоединяем документ к текущей сессии
+            document = session.merge(document);
+
+            // Получаем строки документа через текущую сессию
+            String hql = "FROM DocumentItem WHERE document = :document";
+            List<DocumentItem> items = session.createQuery(hql, DocumentItem.class)
+                    .setParameter("document", document)
+                    .list();
 
             if (items.isEmpty()) {
                 throw new IllegalStateException("Нельзя провести пустой документ");
@@ -104,7 +110,7 @@ public class SaleService {
 
             // Обрабатываем каждую строку
             for (DocumentItem docItem : items) {
-                Item item = docItem.getItem();
+                Item item = session.merge(docItem.getItem());
 
                 if (item == null) {
                     throw new IllegalStateException("Товарная позиция не найдена для строки документа");
@@ -186,6 +192,125 @@ public class SaleService {
      */
     public BigDecimal getAvailableQuantity(Nomenclature nomenclature) {
         return itemDao.getTotalQuantityByNomenclatureAndStatus(nomenclature, ItemStatus.IN_STOCK);
+    }
+
+    /**
+     * Создать и провести документ реализации целиком (для UI)
+     */
+    public Document createAndConfirmSaleDocument(String documentNumber, LocalDate documentDate,
+                                                 Warehouse warehouse, String customer,
+                                                 java.util.List<SaleItemData> items,
+                                                 String performedBy) {
+        Transaction transaction = null;
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            transaction = session.beginTransaction();
+
+            // Присоединяем склад к сессии
+            warehouse = session.merge(warehouse);
+
+            // Создаём документ
+            Document document = new Document(
+                DocumentType.SALE,
+                documentNumber,
+                documentDate,
+                warehouse,
+                customer,
+                DocumentStatus.DRAFT,
+                performedBy
+            );
+            document = session.merge(document);
+
+            // Добавляем строки и проводим
+            for (SaleItemData itemData : items) {
+                Item item = session.merge(itemData.item);
+
+                // Проверяем доступность товара
+                if (item.getStatus() != ItemStatus.IN_STOCK) {
+                    throw new IllegalStateException(
+                        "Товар недоступен для продажи (позиция #" + item.getId() + ")"
+                    );
+                }
+
+                // Проверяем количество
+                if (itemData.quantity.compareTo(item.getQuantity()) > 0) {
+                    throw new IllegalStateException(
+                        "Недостаточно товара. Доступно: " + item.getQuantity()
+                    );
+                }
+
+                // Создаём строку документа
+                DocumentItem documentItem = new DocumentItem(
+                    document,
+                    item.getNomenclature(),
+                    itemData.quantity,
+                    itemData.salePrice,
+                    item.getCurrentShelf()
+                );
+                documentItem.setItem(item);
+                documentItem = session.merge(documentItem);
+
+                // Обновляем количество товара
+                BigDecimal remainingQuantity = item.getQuantity().subtract(itemData.quantity);
+                
+                if (remainingQuantity.compareTo(BigDecimal.ZERO) == 0) {
+                    item.setStatus(ItemStatus.SOLD);
+                }
+                item.setQuantity(remainingQuantity);
+                session.merge(item);
+
+                // Записываем в историю
+                History history = new History(
+                    item,
+                    document,
+                    OperationType.SALE,
+                    itemData.quantity.negate(),
+                    itemData.salePrice,
+                    item.getCurrentShelf(),
+                    null,
+                    ItemStatus.IN_STOCK,
+                    item.getStatus(),
+                    performedBy,
+                    "Продажа по документу " + documentNumber
+                );
+                session.merge(history);
+            }
+
+            // Вычисляем сумму вручную
+            String sumHql = "SELECT COALESCE(SUM(di.quantity * di.price), 0) FROM DocumentItem di WHERE di.document = :document";
+            BigDecimal totalAmount = session.createQuery(sumHql, BigDecimal.class)
+                    .setParameter("document", document)
+                    .uniqueResult();
+            document.setTotalAmount(totalAmount);
+            document.setStatus(DocumentStatus.CONFIRMED);
+            document = session.merge(document);
+
+            transaction.commit();
+            logger.info("Документ реализации {} успешно создан и проведён", documentNumber);
+
+            return document;
+
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+            logger.error("Ошибка при создании документа реализации", e);
+            throw new RuntimeException("Ошибка при создании документа: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Вспомогательный класс для передачи данных строки реализации
+     */
+    public static class SaleItemData {
+        public Item item;
+        public BigDecimal quantity;
+        public BigDecimal salePrice;
+
+        public SaleItemData(Item item, BigDecimal quantity, BigDecimal salePrice) {
+            this.item = item;
+            this.quantity = quantity;
+            this.salePrice = salePrice;
+        }
     }
 }
 
