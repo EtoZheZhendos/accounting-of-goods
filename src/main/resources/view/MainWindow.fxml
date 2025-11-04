@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.store.inventory.controller.MainWindowController">
+
+    <!-- Верхняя панель с меню -->
+    <top>
+        <VBox>
+            <MenuBar>
+                <Menu text="Файл">
+                    <MenuItem text="Выход" onAction="#handleExit"/>
+                </Menu>
+                <Menu text="Документы">
+                    <MenuItem text="Поступление товара"/>
+                    <MenuItem text="Реализация товара"/>
+                    <MenuItem text="Перемещение товара"/>
+                    <MenuItem text="Списание"/>
+                </Menu>
+                <Menu text="Справочники">
+                    <MenuItem text="Номенклатура"/>
+                    <MenuItem text="Производители"/>
+                    <MenuItem text="Склады"/>
+                    <MenuItem text="Полки"/>
+                </Menu>
+                <Menu text="Отчёты">
+                    <MenuItem text="Остатки на складе"/>
+                    <MenuItem text="История операций"/>
+                    <MenuItem text="Отчёт по продажам"/>
+                    <MenuItem text="Товары с низким запасом"/>
+                </Menu>
+                <Menu text="Помощь">
+                    <MenuItem text="О программе"/>
+                </Menu>
+            </MenuBar>
+
+            <!-- Панель инструментов -->
+            <ToolBar>
+                <Button text="Обновить" onAction="#handleRefresh"/>
+                <Separator orientation="VERTICAL"/>
+                <Button text="Поступление"/>
+                <Button text="Реализация"/>
+                <Button text="Перемещение"/>
+                <Separator orientation="VERTICAL"/>
+                <Button text="Отчёты"/>
+            </ToolBar>
+        </VBox>
+    </top>
+
+    <!-- Центральная часть с вкладками -->
+    <center>
+        <TabPane tabClosingPolicy="UNAVAILABLE">
+            <!-- Вкладка "Остатки" -->
+            <Tab text="Остатки на складе">
+                <VBox spacing="10" styleClass="content-pane">
+                    <padding>
+                        <Insets top="10" right="10" bottom="10" left="10"/>
+                    </padding>
+
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="Остатки товаров на складе" styleClass="header-label"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button text="Обновить" onAction="#loadStockData"/>
+                    </HBox>
+
+                    <TableView fx:id="stockTable" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="stockArticleCol" text="Артикул" prefWidth="120"/>
+                            <TableColumn fx:id="stockNameCol" text="Наименование" prefWidth="300"/>
+                            <TableColumn fx:id="stockManufacturerCol" text="Производитель" prefWidth="200"/>
+                            <TableColumn fx:id="stockQuantityCol" text="Количество" prefWidth="120"/>
+                            <TableColumn fx:id="stockUnitCol" text="Ед. изм." prefWidth="100"/>
+                        </columns>
+                    </TableView>
+                </VBox>
+            </Tab>
+
+            <!-- Вкладка "Номенклатура" -->
+            <Tab text="Номенклатура">
+                <VBox spacing="10" styleClass="content-pane">
+                    <padding>
+                        <Insets top="10" right="10" bottom="10" left="10"/>
+                    </padding>
+
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="Справочник номенклатуры" styleClass="header-label"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button text="Добавить"/>
+                        <Button text="Изменить"/>
+                        <Button text="Удалить"/>
+                    </HBox>
+
+                    <TableView fx:id="nomenclatureTable" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="nomArticleCol" text="Артикул" prefWidth="120"/>
+                            <TableColumn fx:id="nomNameCol" text="Наименование" prefWidth="300"/>
+                            <TableColumn fx:id="nomManufacturerCol" text="Производитель" prefWidth="200"/>
+                            <TableColumn fx:id="nomUnitCol" text="Ед. изм." prefWidth="100"/>
+                        </columns>
+                    </TableView>
+                </VBox>
+            </Tab>
+
+            <!-- Вкладка "Документы" -->
+            <Tab text="Документы">
+                <VBox spacing="10" styleClass="content-pane">
+                    <padding>
+                        <Insets top="10" right="10" bottom="10" left="10"/>
+                    </padding>
+
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="Документы движения товаров" styleClass="header-label"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button text="Создать"/>
+                        <Button text="Открыть"/>
+                        <Button text="Удалить"/>
+                    </HBox>
+
+                    <TableView fx:id="documentTable" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="docNumberCol" text="Номер" prefWidth="120"/>
+                            <TableColumn fx:id="docTypeCol" text="Тип" prefWidth="150"/>
+                            <TableColumn fx:id="docDateCol" text="Дата" prefWidth="120"/>
+                            <TableColumn fx:id="docStatusCol" text="Статус" prefWidth="120"/>
+                            <TableColumn fx:id="docAmountCol" text="Сумма" prefWidth="150"/>
+                        </columns>
+                    </TableView>
+                </VBox>
+            </Tab>
+
+            <!-- Вкладка "Склады" -->
+            <Tab text="Склады">
+                <VBox spacing="10" styleClass="content-pane">
+                    <padding>
+                        <Insets top="10" right="10" bottom="10" left="10"/>
+                    </padding>
+
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="Справочник складов" styleClass="header-label"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button text="Добавить"/>
+                        <Button text="Изменить"/>
+                        <Button text="Удалить"/>
+                    </HBox>
+
+                    <TableView fx:id="warehouseTable" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="warehouseNameCol" text="Название" prefWidth="250"/>
+                            <TableColumn fx:id="warehouseAddressCol" text="Адрес" prefWidth="400"/>
+                            <TableColumn fx:id="warehouseActiveCol" text="Активен" prefWidth="100"/>
+                        </columns>
+                    </TableView>
+                </VBox>
+            </Tab>
+        </TabPane>
+    </center>
+
+    <!-- Нижняя панель со статусом -->
+    <bottom>
+        <HBox spacing="10" styleClass="status-bar" alignment="CENTER_LEFT">
+            <padding>
+                <Insets top="5" right="10" bottom="5" left="10"/>
+            </padding>
+            <Label fx:id="statusLabel" text="Готово"/>
+        </HBox>
+    </bottom>
+
+</BorderPane>
+

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC
+        "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+    <session-factory>
+        <!-- Database connection settings -->
+        <property name="hibernate.connection.driver_class">org.h2.Driver</property>
+        <property name="hibernate.connection.url">jdbc:h2:./data/inventory_db;AUTO_SERVER=TRUE</property>
+        <property name="hibernate.connection.username">sa</property>
+        <property name="hibernate.connection.password"></property>
+
+        <!-- SQL dialect -->
+        <property name="hibernate.dialect">org.hibernate.dialect.H2Dialect</property>
+
+        <!-- Echo all executed SQL to stdout -->
+        <property name="hibernate.show_sql">true</property>
+        <property name="hibernate.format_sql">true</property>
+
+        <!-- Drop and re-create the database schema on startup -->
+        <!-- Use "update" for production, "create-drop" for testing -->
+        <property name="hibernate.hbm2ddl.auto">update</property>
+
+        <!-- Connection pool settings -->
+        <property name="hibernate.connection.pool_size">10</property>
+
+        <!-- Enable Hibernate's automatic session context management -->
+        <property name="hibernate.current_session_context_class">thread</property>
+
+        <!-- Disable the second-level cache  -->
+        <property name="hibernate.cache.use_second_level_cache">false</property>
+
+        <!-- Entity mappings -->
+        <mapping class="com.store.inventory.domain.Manufacturer"/>
+        <mapping class="com.store.inventory.domain.Nomenclature"/>
+        <mapping class="com.store.inventory.domain.Warehouse"/>
+        <mapping class="com.store.inventory.domain.Shelf"/>
+        <mapping class="com.store.inventory.domain.Item"/>
+        <mapping class="com.store.inventory.domain.Document"/>
+        <mapping class="com.store.inventory.domain.DocumentItem"/>
+        <mapping class="com.store.inventory.domain.History"/>
+    </session-factory>
+</hibernate-configuration>
+
