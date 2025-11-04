@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.store.inventory.controller.ManufacturerDialogController"
+      spacing="10" styleClass="dialog-content">
+    
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <Label text="Добавление/Редактирование производителя" styleClass="dialog-header"/>
+
+    <GridPane hgap="10" vgap="10">
+        <columnConstraints>
+            <ColumnConstraints minWidth="120" prefWidth="120"/>
+            <ColumnConstraints minWidth="300" prefWidth="400" hgrow="ALWAYS"/>
+        </columnConstraints>
+
+        <!-- Название -->
+        <Label text="Название*:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+        <TextField fx:id="nameField" promptText="Введите название производителя" 
+                   GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+        <!-- Страна -->
+        <Label text="Страна:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+        <TextField fx:id="countryField" promptText="Введите страну" 
+                   GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+        <!-- Контактная информация -->
+        <Label text="Контакты:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+        <TextArea fx:id="contactInfoArea" promptText="Телефон, email, адрес..." 
+                  prefRowCount="3" wrapText="true"
+                  GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+    </GridPane>
+
+    <Label text="* - обязательные поля" styleClass="hint-label"/>
+
+    <!-- Кнопки -->
+    <HBox spacing="10" alignment="CENTER_RIGHT">
+        <Button fx:id="saveButton" text="Сохранить" onAction="#handleSave" 
+                styleClass="primary-button" defaultButton="true"/>
+        <Button fx:id="cancelButton" text="Отмена" onAction="#handleCancel" 
+                cancelButton="true"/>
+    </HBox>
+</VBox>
+

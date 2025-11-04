@@ -193,5 +193,31 @@ public class MovementService {
             throw new RuntimeException("Ошибка при перемещении: " + e.getMessage(), e);
         }
     }
+
+    /**
+     * Переместить товар с созданием документа (упрощенный метод для UI)
+     */
+    public void moveItem(String documentNumber, java.time.LocalDate documentDate, 
+                        Item item, java.math.BigDecimal quantity, 
+                        Shelf targetShelf, String comment, String performedBy) {
+        // Проверяем количество
+        if (quantity.compareTo(item.getQuantity()) > 0) {
+            throw new IllegalArgumentException("Недостаточно товара для перемещения");
+        }
+
+        // Создаем документ
+        Document document = createMovementDocument(
+            documentNumber, 
+            documentDate, 
+            item.getCurrentShelf().getWarehouse(), 
+            performedBy
+        );
+
+        // Добавляем товар в документ
+        addMovementItem(document, item, targetShelf);
+
+        // Проводим документ
+        confirmMovementDocument(document, performedBy);
+    }
 }
 

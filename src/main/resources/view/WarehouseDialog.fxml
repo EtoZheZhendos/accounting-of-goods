@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.store.inventory.controller.WarehouseDialogController"
+      spacing="10" styleClass="dialog-content">
+    
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <Label text="Добавление/Редактирование склада" styleClass="dialog-header"/>
+
+    <GridPane hgap="10" vgap="10">
+        <columnConstraints>
+            <ColumnConstraints minWidth="120" prefWidth="120"/>
+            <ColumnConstraints minWidth="300" prefWidth="400" hgrow="ALWAYS"/>
+        </columnConstraints>
+
+        <!-- Название -->
+        <Label text="Название*:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+        <TextField fx:id="nameField" promptText="Введите название склада" 
+                   GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+        <!-- Адрес -->
+        <Label text="Адрес:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+        <TextArea fx:id="addressArea" promptText="Введите адрес склада" 
+                  prefRowCount="3" wrapText="true"
+                  GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+        <!-- Активен -->
+        <Label text="Активен:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+        <CheckBox fx:id="isActiveCheckbox" text="Склад активен" 
+                  GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+    </GridPane>
+
+    <Label text="* - обязательные поля" styleClass="hint-label"/>
+
+    <!-- Кнопки -->
+    <HBox spacing="10" alignment="CENTER_RIGHT">
+        <Button fx:id="saveButton" text="Сохранить" onAction="#handleSave" 
+                styleClass="primary-button" defaultButton="true"/>
+        <Button fx:id="cancelButton" text="Отмена" onAction="#handleCancel" 
+                cancelButton="true"/>
+    </HBox>
+</VBox>
+

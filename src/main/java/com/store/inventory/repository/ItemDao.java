@@ -130,5 +130,28 @@ public class ItemDao extends GenericDao<Item, Long> {
             throw new RuntimeException("Ошибка при поиске: " + e.getMessage(), e);
         }
     }
+
+    /**
+     * Найти доступные товары по номенклатуре и складу
+     */
+    public List<Item> findAvailableByNomenclatureAndWarehouse(Nomenclature nomenclature, com.store.inventory.domain.Warehouse warehouse) {
+        try (Session session = getSession()) {
+            String hql = """
+                FROM Item i
+                WHERE i.nomenclature = :nomenclature
+                AND i.currentShelf.warehouse = :warehouse
+                AND i.status = 'IN_STOCK'
+                AND i.quantity > 0
+                ORDER BY i.createdAt
+                """;
+            Query<Item> query = session.createQuery(hql, Item.class);
+            query.setParameter("nomenclature", nomenclature);
+            query.setParameter("warehouse", warehouse);
+            return query.list();
+        } catch (Exception e) {
+            logger.error("Ошибка при поиске товаров по номенклатуре и складу", e);
+            throw new RuntimeException("Ошибка при поиске: " + e.getMessage(), e);
+        }
+    }
 }
 

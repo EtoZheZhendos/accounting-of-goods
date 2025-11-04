@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.store.inventory.controller.MovementDialogController"
+      spacing="15" styleClass="dialog-content" prefWidth="700">
+    
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <Label text="Перемещение товара между полками" styleClass="dialog-header"/>
+
+    <!-- Шапка документа -->
+    <TitledPane text="Реквизиты документа" collapsible="false">
+        <GridPane hgap="10" vgap="10">
+            <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
+            <columnConstraints>
+                <ColumnConstraints minWidth="120" prefWidth="120"/>
+                <ColumnConstraints minWidth="200" prefWidth="500" hgrow="ALWAYS"/>
+            </columnConstraints>
+
+            <Label text="Номер*:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+            <TextField fx:id="documentNumberField" promptText="ПР-00001" 
+                       GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+            <Label text="Дата*:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+            <DatePicker fx:id="documentDatePicker" 
+                        GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+        </GridPane>
+    </TitledPane>
+
+    <!-- Выбор товара -->
+    <TitledPane text="Товар для перемещения" collapsible="false">
+        <GridPane hgap="10" vgap="10">
+            <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
+            <columnConstraints>
+                <ColumnConstraints minWidth="120" prefWidth="120"/>
+                <ColumnConstraints minWidth="200" prefWidth="500" hgrow="ALWAYS"/>
+            </columnConstraints>
+
+            <Label text="Номенклатура*:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+            <ComboBox fx:id="nomenclatureCombo" prefWidth="500"
+                      GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+            <Label text="Товарная позиция*:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+            <VBox spacing="5" GridPane.rowIndex="1" GridPane.columnIndex="1">
+                <ComboBox fx:id="itemCombo" prefWidth="500"/>
+                <Label fx:id="availableQuantityLabel" text="Доступно: 0" 
+                       style="-fx-font-weight: bold; -fx-text-fill: #27ae60;"/>
+            </VBox>
+
+            <Label text="Количество*:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+            <TextField fx:id="quantityField" promptText="10"
+                       GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+        </GridPane>
+    </TitledPane>
+
+    <!-- Полки -->
+    <TitledPane text="Перемещение" collapsible="false">
+        <GridPane hgap="10" vgap="10">
+            <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
+            <columnConstraints>
+                <ColumnConstraints minWidth="120" prefWidth="120"/>
+                <ColumnConstraints minWidth="200" prefWidth="500" hgrow="ALWAYS"/>
+            </columnConstraints>
+
+            <Label text="Исходная полка:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+            <ComboBox fx:id="sourceShelfCombo" disable="true" prefWidth="500"
+                      GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+            <Label text="Целевая полка*:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+            <ComboBox fx:id="targetShelfCombo" prefWidth="500"
+                      GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+            <Label text="Комментарий:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+            <TextArea fx:id="commentArea" promptText="Причина перемещения..." 
+                      prefRowCount="3" wrapText="true"
+                      GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+        </GridPane>
+    </TitledPane>
+
+    <Label text="* - обязательные поля" styleClass="hint-label"/>
+
+    <!-- Кнопки -->
+    <HBox spacing="10" alignment="CENTER_RIGHT">
+        <Button fx:id="saveButton" text="Выполнить перемещение" onAction="#handleSave" 
+                styleClass="primary-button" defaultButton="true"/>
+        <Button fx:id="cancelButton" text="Отмена" onAction="#handleCancel" 
+                cancelButton="true"/>
+    </HBox>
+</VBox>
+

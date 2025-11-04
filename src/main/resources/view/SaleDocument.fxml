@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.store.inventory.controller.SaleDocumentController"
+      spacing="15" styleClass="dialog-content" prefWidth="800">
+    
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <Label text="Документ реализации товара" styleClass="dialog-header"/>
+
+    <!-- Шапка документа -->
+    <TitledPane text="Реквизиты документа" collapsible="false">
+        <GridPane hgap="10" vgap="10">
+            <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
+            <columnConstraints>
+                <ColumnConstraints minWidth="120" prefWidth="120"/>
+                <ColumnConstraints minWidth="200" prefWidth="250" hgrow="ALWAYS"/>
+                <ColumnConstraints minWidth="120" prefWidth="120"/>
+                <ColumnConstraints minWidth="200" prefWidth="250" hgrow="ALWAYS"/>
+            </columnConstraints>
+
+            <Label text="Номер*:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+            <TextField fx:id="documentNumberField" promptText="РЛ-00001" 
+                       GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+            <Label text="Дата*:" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+            <DatePicker fx:id="documentDatePicker" 
+                        GridPane.rowIndex="0" GridPane.columnIndex="3"/>
+
+            <Label text="Склад*:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+            <ComboBox fx:id="warehouseCombo" prefWidth="250"
+                      GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+            <Label text="Покупатель:" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+            <TextField fx:id="customerField" promptText="Название покупателя"
+                       GridPane.rowIndex="1" GridPane.columnIndex="3"/>
+        </GridPane>
+    </TitledPane>
+
+    <!-- Добавление товаров -->
+    <TitledPane text="Добавление товара" collapsible="false">
+        <GridPane hgap="10" vgap="10">
+            <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
+            <columnConstraints>
+                <ColumnConstraints minWidth="120" prefWidth="120"/>
+                <ColumnConstraints minWidth="200" prefWidth="600" hgrow="ALWAYS"/>
+            </columnConstraints>
+
+            <Label text="Номенклатура*:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+            <ComboBox fx:id="nomenclatureCombo" prefWidth="600"
+                      GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+            <Label text="Товарная позиция*:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+            <HBox spacing="10" GridPane.rowIndex="1" GridPane.columnIndex="1">
+                <ComboBox fx:id="itemCombo" prefWidth="400"/>
+                <Label fx:id="availableQuantityLabel" text="Доступно: 0" 
+                       style="-fx-font-weight: bold;"/>
+            </HBox>
+
+            <Label text="Количество*:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+            <HBox spacing="10" GridPane.rowIndex="2" GridPane.columnIndex="1">
+                <TextField fx:id="quantityField" promptText="10" prefWidth="100"/>
+                <Label text="Цена продажи*:"/>
+                <TextField fx:id="salePriceField" promptText="2000.00" prefWidth="100"/>
+            </HBox>
+
+            <HBox spacing="10" alignment="CENTER_RIGHT" GridPane.rowIndex="3" GridPane.columnIndex="1">
+                <Button fx:id="addItemButton" text="Добавить товар" onAction="#handleAddItem" 
+                        styleClass="primary-button"/>
+            </HBox>
+        </GridPane>
+    </TitledPane>
+
+    <!-- Таблица товаров -->
+    <VBox spacing="5" VBox.vgrow="ALWAYS">
+        <Label text="Товары в документе:" style="-fx-font-weight: bold;"/>
+        <TableView fx:id="itemsTable" VBox.vgrow="ALWAYS" prefHeight="200">
+            <columns>
+                <TableColumn fx:id="itemNomenclatureCol" text="Номенклатура" prefWidth="300"/>
+                <TableColumn fx:id="itemQuantityCol" text="Количество" prefWidth="100"/>
+                <TableColumn fx:id="itemPriceCol" text="Цена продажи" prefWidth="120"/>
+                <TableColumn fx:id="itemTotalCol" text="Сумма" prefWidth="120"/>
+            </columns>
+        </TableView>
+        <HBox spacing="10">
+            <Button fx:id="removeItemButton" text="Удалить строку" onAction="#handleRemoveItem"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="totalLabel" text="Итого: 0.00 руб." 
+                   style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+        </HBox>
+    </VBox>
+
+    <!-- Кнопки -->
+    <HBox spacing="10" alignment="CENTER_RIGHT">
+        <Button fx:id="saveButton" text="Провести документ" onAction="#handleSave" 
+                styleClass="primary-button" defaultButton="true"/>
+        <Button fx:id="cancelButton" text="Отмена" onAction="#handleCancel" 
+                cancelButton="true"/>
+    </HBox>
+</VBox>
+

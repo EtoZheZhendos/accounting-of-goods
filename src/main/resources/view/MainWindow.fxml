@@ -16,9 +16,9 @@
                     <MenuItem text="Выход" onAction="#handleExit"/>
                 </Menu>
                 <Menu text="Документы">
-                    <MenuItem text="Поступление товара"/>
-                    <MenuItem text="Реализация товара"/>
-                    <MenuItem text="Перемещение товара"/>
+                    <MenuItem text="Поступление товара" onAction="#handleCreateReceiptDocument"/>
+                    <MenuItem text="Реализация товара" onAction="#handleCreateSaleDocument"/>
+                    <MenuItem text="Перемещение товара" onAction="#handleCreateMovementDocument"/>
                     <MenuItem text="Списание"/>
                 </Menu>
                 <Menu text="Справочники">
@@ -29,7 +29,7 @@
                 </Menu>
                 <Menu text="Отчёты">
                     <MenuItem text="Остатки на складе"/>
-                    <MenuItem text="История операций"/>
+                    <MenuItem text="История операций" onAction="#handleViewHistory"/>
                     <MenuItem text="Отчёт по продажам"/>
                     <MenuItem text="Товары с низким запасом"/>
                 </Menu>
@@ -42,9 +42,9 @@
             <ToolBar>
                 <Button text="Обновить" onAction="#handleRefresh"/>
                 <Separator orientation="VERTICAL"/>
-                <Button text="Поступление"/>
-                <Button text="Реализация"/>
-                <Button text="Перемещение"/>
+                <Button text="Поступление" onAction="#handleCreateReceiptDocument"/>
+                <Button text="Реализация" onAction="#handleCreateSaleDocument"/>
+                <Button text="Перемещение" onAction="#handleCreateMovementDocument"/>
                 <Separator orientation="VERTICAL"/>
                 <Button text="Отчёты"/>
             </ToolBar>
@@ -142,9 +142,9 @@
                     <HBox spacing="10" alignment="CENTER_LEFT">
                         <Label text="Справочник складов" styleClass="header-label"/>
                         <Region HBox.hgrow="ALWAYS"/>
-                        <Button text="Добавить"/>
-                        <Button text="Изменить"/>
-                        <Button text="Удалить"/>
+                        <Button text="Добавить" onAction="#handleAddWarehouse"/>
+                        <Button text="Изменить" onAction="#handleEditWarehouse"/>
+                        <Button text="Удалить" onAction="#handleDeleteWarehouse"/>
                     </HBox>
 
                     <TableView fx:id="warehouseTable" VBox.vgrow="ALWAYS">

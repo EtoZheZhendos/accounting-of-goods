@@ -387,6 +387,187 @@ public class MainWindowController {
     }
 
     /**
+     * Добавить склад
+     */
+    @FXML
+    public void handleAddWarehouse() {
+        openDialog("/view/WarehouseDialog.fxml", "Добавление склада", 
+                    this::loadWarehouseData, "Склад добавлен");
+    }
+
+    /**
+     * Редактировать склад
+     */
+    @FXML
+    public void handleEditWarehouse() {
+        Warehouse selected = warehouseTable.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showWarning("Выберите склад", "Пожалуйста, выберите склад для редактирования");
+            return;
+        }
+        openDialogWithData("/view/WarehouseDialog.fxml", "Редактирование склада", 
+                          selected, this::loadWarehouseData, "Склад обновлён");
+    }
+
+    /**
+     * Удалить склад
+     */
+    @FXML
+    public void handleDeleteWarehouse() {
+        Warehouse selected = warehouseTable.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showWarning("Выберите склад", "Пожалуйста, выберите склад для удаления");
+            return;
+        }
+
+        if (confirmDelete("склад", selected.getName())) {
+            try {
+                warehouseDao.delete(selected);
+                loadWarehouseData();
+                statusLabel.setText("Склад удалён");
+            } catch (Exception e) {
+                logger.error("Ошибка при удалении склада", e);
+                showError("Ошибка удаления", "Не удалось удалить склад: " + e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Создать документ поступления
+     */
+    @FXML
+    public void handleCreateReceiptDocument() {
+        openDialog("/view/ReceiptDocument.fxml", "Документ поступления", 
+                    this::loadAllData, "Документ поступления создан");
+    }
+
+    /**
+     * Создать документ реализации
+     */
+    @FXML
+    public void handleCreateSaleDocument() {
+        openDialog("/view/SaleDocument.fxml", "Документ реализации", 
+                    this::loadAllData, "Документ реализации создан");
+    }
+
+    /**
+     * Просмотр истории операций
+     */
+    @FXML
+    public void handleViewHistory() {
+        openDialog("/view/ItemHistory.fxml", "История операций с товаром", 
+                    null, "");
+    }
+
+    /**
+     * Создать документ перемещения
+     */
+    @FXML
+    public void handleCreateMovementDocument() {
+        openDialog("/view/MovementDialog.fxml", "Перемещение товара", 
+                    this::loadAllData, "Перемещение выполнено");
+    }
+
+    /**
+     * Универсальный метод открытия диалога
+     */
+    private void openDialog(String fxmlPath, String title, Runnable onSuccess, String successMessage) {
+        try {
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(
+                getClass().getResource(fxmlPath)
+            );
+            javafx.scene.Parent root = loader.load();
+
+            Object controller = loader.getController();
+
+            javafx.stage.Stage stage = new javafx.stage.Stage();
+            stage.setTitle(title);
+            stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+            stage.setScene(new javafx.scene.Scene(root));
+            stage.showAndWait();
+
+            // Проверяем, был ли сохранён результат
+            boolean saved = false;
+            try {
+                java.lang.reflect.Method method = controller.getClass().getMethod("isSaved");
+                saved = (Boolean) method.invoke(controller);
+            } catch (Exception e) {
+                // Игнорируем, если метод не найден
+            }
+
+            if (saved && onSuccess != null) {
+                onSuccess.run();
+                statusLabel.setText(successMessage);
+            }
+
+        } catch (Exception e) {
+            logger.error("Ошибка при открытии диалога: " + fxmlPath, e);
+            showError("Ошибка", "Не удалось открыть диалог: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Универсальный метод открытия диалога с данными
+     */
+    private <T> void openDialogWithData(String fxmlPath, String title, T data, 
+                                       Runnable onSuccess, String successMessage) {
+        try {
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(
+                getClass().getResource(fxmlPath)
+            );
+            javafx.scene.Parent root = loader.load();
+
+            Object controller = loader.getController();
+
+            // Устанавливаем данные через рефлексию
+            if (data != null) {
+                String setterName = "set" + data.getClass().getSimpleName();
+                try {
+                    java.lang.reflect.Method method = controller.getClass()
+                        .getMethod(setterName, data.getClass());
+                    method.invoke(controller, data);
+                } catch (Exception e) {
+                    logger.warn("Не удалось вызвать метод " + setterName, e);
+                }
+            }
+
+            javafx.stage.Stage stage = new javafx.stage.Stage();
+            stage.setTitle(title);
+            stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+            stage.setScene(new javafx.scene.Scene(root));
+            stage.showAndWait();
+
+            boolean saved = false;
+            try {
+                java.lang.reflect.Method method = controller.getClass().getMethod("isSaved");
+                saved = (Boolean) method.invoke(controller);
+            } catch (Exception e) {
+                // Игнорируем
+            }
+
+            if (saved && onSuccess != null) {
+                onSuccess.run();
+                statusLabel.setText(successMessage);
+            }
+
+        } catch (Exception e) {
+            logger.error("Ошибка при открытии диалога: " + fxmlPath, e);
+            showError("Ошибка", "Не удалось открыть диалог: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Подтверждение удаления
+     */
+    private boolean confirmDelete(String entityType, String entityName) {
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Подтверждение удаления");
+        confirm.setHeaderText("Удалить " + entityType + "?");
+        confirm.setContentText("Вы уверены, что хотите удалить \"" + entityName + "\"?");
+        return confirm.showAndWait().orElse(null) == javafx.scene.control.ButtonType.OK;
+    }
+
+    /**
      * Вспомогательный класс для отображения остатков
      */
     public static class NomenclatureStock {

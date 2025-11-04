@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.store.inventory.controller.ItemHistoryController"
+      spacing="15" styleClass="dialog-content" prefWidth="900" prefHeight="600">
+    
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <Label text="История операций с товаром" styleClass="dialog-header"/>
+
+    <!-- Фильтры -->
+    <GridPane hgap="10" vgap="10">
+        <columnConstraints>
+            <ColumnConstraints minWidth="120" prefWidth="120"/>
+            <ColumnConstraints minWidth="300" prefWidth="700" hgrow="ALWAYS"/>
+        </columnConstraints>
+
+        <Label text="Номенклатура:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+        <ComboBox fx:id="nomenclatureCombo" prefWidth="700"
+                  GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+        <Label text="Товарная позиция:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+        <ComboBox fx:id="itemCombo" prefWidth="700"
+                  GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+    </GridPane>
+
+    <!-- Таблица истории -->
+    <TableView fx:id="historyTable" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="dateTimeCol" text="Дата и время" prefWidth="150"/>
+            <TableColumn fx:id="operationTypeCol" text="Операция" prefWidth="120"/>
+            <TableColumn fx:id="documentNumberCol" text="Документ" prefWidth="120"/>
+            <TableColumn fx:id="quantityChangeCol" text="Изменение" prefWidth="100"/>
+            <TableColumn fx:id="balanceCol" text="Остаток" prefWidth="100"/>
+            <TableColumn fx:id="shelfCol" text="Полка" prefWidth="100"/>
+            <TableColumn fx:id="performerCol" text="Исполнитель" prefWidth="150"/>
+        </columns>
+    </TableView>
+
+    <!-- Кнопки -->
+    <HBox spacing="10" alignment="CENTER_RIGHT">
+        <Button fx:id="closeButton" text="Закрыть" onAction="#handleClose"/>
+    </HBox>
+</VBox>
+
