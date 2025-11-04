@@ -37,7 +37,7 @@ public class Document {
     @Column(name = "document_date", nullable = false)
     private LocalDate documentDate;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "warehouse_id")
     private Warehouse warehouse;
 

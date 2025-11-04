@@ -27,7 +27,7 @@ public class Item {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "nomenclature_id", nullable = false)
     private Nomenclature nomenclature;
 
@@ -46,7 +46,7 @@ public class Item {
     @Column(name = "selling_price", precision = 12, scale = 2)
     private BigDecimal sellingPrice; // цена продажи
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "current_shelf_id")
     private Shelf currentShelf; // текущее местоположение
 

@@ -24,15 +24,15 @@ public class DocumentItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "document_id", nullable = false)
     private Document document;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "nomenclature_id", nullable = false)
     private Nomenclature nomenclature;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "item_id")
     private Item item; // ссылка на конкретную товарную позицию (может быть NULL для новых поступлений)
 
@@ -45,7 +45,7 @@ public class DocumentItem {
     @Column(name = "total", nullable = false, precision = 12, scale = 2)
     private BigDecimal total;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "shelf_id")
     private Shelf shelf; // полка для размещения/списания
 

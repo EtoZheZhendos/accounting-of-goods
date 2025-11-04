@@ -37,7 +37,7 @@ public class Nomenclature {
     @Column(name = "unit", nullable = false, length = 20)
     private String unit; // шт, кг, л, м и т.д.
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "manufacturer_id")
     private Manufacturer manufacturer;
 
