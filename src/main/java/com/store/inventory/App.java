@@ -1,5 +1,6 @@
 package com.store.inventory;
 
+import com.store.inventory.util.DataSeeder;
 import com.store.inventory.util.HibernateUtil;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -24,6 +25,10 @@ public class App extends Application {
             // Инициализация Hibernate
             HibernateUtil.getSessionFactory();
             logger.info("База данных инициализирована");
+
+            // Заполнение тестовыми данными
+            DataSeeder seeder = new DataSeeder();
+            seeder.seed();
 
             // Загрузка главного окна
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/MainWindow.fxml"));

@@ -162,3 +162,38 @@
     -fx-font-weight: bold;
 }
 
+.dialog-content {
+    -fx-background-color: white;
+}
+
+.dialog-header {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c3e50;
+    -fx-padding: 0 0 10 0;
+}
+
+.hint-label {
+    -fx-font-size: 11px;
+    -fx-text-fill: #7f8c8d;
+    -fx-font-style: italic;
+}
+
+.primary-button {
+    -fx-background-color: #27ae60;
+    -fx-text-fill: white;
+}
+
+.primary-button:hover {
+    -fx-background-color: #229954;
+}
+
+/* Спиннеры */
+.spinner {
+    -fx-background-color: white;
+}
+
+.spinner .text-field {
+    -fx-background-color: white;
+}
+

@@ -89,9 +89,9 @@
                     <HBox spacing="10" alignment="CENTER_LEFT">
                         <Label text="Справочник номенклатуры" styleClass="header-label"/>
                         <Region HBox.hgrow="ALWAYS"/>
-                        <Button text="Добавить"/>
-                        <Button text="Изменить"/>
-                        <Button text="Удалить"/>
+                        <Button text="Добавить" onAction="#handleAddNomenclature"/>
+                        <Button text="Изменить" onAction="#handleEditNomenclature"/>
+                        <Button text="Удалить" onAction="#handleDeleteNomenclature"/>
                     </HBox>
 
                     <TableView fx:id="nomenclatureTable" VBox.vgrow="ALWAYS">

@@ -281,6 +281,112 @@ public class MainWindowController {
     }
 
     /**
+     * Добавить новую номенклатуру
+     */
+    @FXML
+    public void handleAddNomenclature() {
+        try {
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(
+                getClass().getResource("/view/NomenclatureDialog.fxml")
+            );
+            javafx.scene.Parent root = loader.load();
+
+            NomenclatureDialogController controller = loader.getController();
+
+            javafx.stage.Stage stage = new javafx.stage.Stage();
+            stage.setTitle("Добавление номенклатуры");
+            stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+            stage.setScene(new javafx.scene.Scene(root));
+            stage.showAndWait();
+
+            if (controller.isSaved()) {
+                loadNomenclatureData();
+                statusLabel.setText("Номенклатура добавлена");
+            }
+
+        } catch (Exception e) {
+            logger.error("Ошибка при открытии диалога номенклатуры", e);
+            showError("Ошибка", "Не удалось открыть диалог: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Редактировать выбранную номенклатуру
+     */
+    @FXML
+    public void handleEditNomenclature() {
+        Nomenclature selected = nomenclatureTable.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showWarning("Выберите номенклатуру", "Пожалуйста, выберите номенклатуру для редактирования");
+            return;
+        }
+
+        try {
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(
+                getClass().getResource("/view/NomenclatureDialog.fxml")
+            );
+            javafx.scene.Parent root = loader.load();
+
+            NomenclatureDialogController controller = loader.getController();
+            controller.setNomenclature(selected);
+
+            javafx.stage.Stage stage = new javafx.stage.Stage();
+            stage.setTitle("Редактирование номенклатуры");
+            stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+            stage.setScene(new javafx.scene.Scene(root));
+            stage.showAndWait();
+
+            if (controller.isSaved()) {
+                loadNomenclatureData();
+                statusLabel.setText("Номенклатура обновлена");
+            }
+
+        } catch (Exception e) {
+            logger.error("Ошибка при открытии диалога редактирования", e);
+            showError("Ошибка", "Не удалось открыть диалог: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Удалить выбранную номенклатуру
+     */
+    @FXML
+    public void handleDeleteNomenclature() {
+        Nomenclature selected = nomenclatureTable.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showWarning("Выберите номенклатуру", "Пожалуйста, выберите номенклатуру для удаления");
+            return;
+        }
+
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Подтверждение удаления");
+        confirm.setHeaderText("Удалить номенклатуру?");
+        confirm.setContentText("Вы уверены, что хотите удалить \"" + selected.getName() + "\"?");
+
+        if (confirm.showAndWait().orElse(null) == javafx.scene.control.ButtonType.OK) {
+            try {
+                nomenclatureDao.delete(selected);
+                loadNomenclatureData();
+                statusLabel.setText("Номенклатура удалена");
+            } catch (Exception e) {
+                logger.error("Ошибка при удалении номенклатуры", e);
+                showError("Ошибка удаления", "Не удалось удалить номенклатуру: " + e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Показать предупреждение
+     */
+    private void showWarning(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    /**
      * Вспомогательный класс для отображения остатков
      */
     public static class NomenclatureStock {
