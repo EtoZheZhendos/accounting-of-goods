@@ -9,16 +9,27 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * DAO для работы с номенклатурой
+ * DAO для работы с номенклатурой товаров
+ * 
+ * <p>Предоставляет методы доступа к данным номенклатуры товаров.
+ * Расширяет базовый GenericDao методами поиска по артикулу, производителю,
+ * названию и проверки низкого уровня запасов.</p>
  */
 public class NomenclatureDao extends GenericDao<Nomenclature, Long> {
 
+    /**
+     * Создает экземпляр DAO для работы с номенклатурой
+     */
     public NomenclatureDao() {
         super(Nomenclature.class);
     }
 
     /**
-     * Найти номенклатуру по артикулу
+     * Находит номенклатуру по уникальному артикулу
+     * 
+     * @param article артикул товара
+     * @return Optional с найденной номенклатурой или пустой Optional
+     * @throws RuntimeException если произошла ошибка при поиске
      */
     public Optional<Nomenclature> findByArticle(String article) {
         try (Session session = getSession()) {
@@ -33,7 +44,13 @@ public class NomenclatureDao extends GenericDao<Nomenclature, Long> {
     }
 
     /**
-     * Найти номенклатуру по производителю
+     * Возвращает список номенклатуры указанного производителя
+     * 
+     * <p>Результаты сортируются по названию товара.</p>
+     * 
+     * @param manufacturer производитель
+     * @return список номенклатуры производителя
+     * @throws RuntimeException если произошла ошибка при поиске
      */
     public List<Nomenclature> findByManufacturer(Manufacturer manufacturer) {
         try (Session session = getSession()) {
@@ -48,7 +65,13 @@ public class NomenclatureDao extends GenericDao<Nomenclature, Long> {
     }
 
     /**
-     * Поиск номенклатуры по названию (частичное совпадение)
+     * Выполняет поиск номенклатуры по частичному совпадению названия
+     * 
+     * <p>Поиск регистронезависимый. Результаты сортируются по названию.</p>
+     * 
+     * @param searchTerm поисковый запрос
+     * @return список найденной номенклатуры
+     * @throws RuntimeException если произошла ошибка при поиске
      */
     public List<Nomenclature> searchByName(String searchTerm) {
         try (Session session = getSession()) {
@@ -63,7 +86,13 @@ public class NomenclatureDao extends GenericDao<Nomenclature, Long> {
     }
 
     /**
-     * Получить номенклатуру с низким уровнем запаса
+     * Возвращает номенклатуру, у которой текущий остаток ниже минимального уровня
+     * 
+     * <p>Для каждой номенклатуры подсчитывается сумма доступных товаров в статусе IN_STOCK
+     * и сравнивается с минимальным уровнем запаса. Результаты сортируются по названию.</p>
+     * 
+     * @return список номенклатуры с низким уровнем запаса
+     * @throws RuntimeException если произошла ошибка при получении списка
      */
     public List<Nomenclature> findLowStockItems() {
         try (Session session = getSession()) {

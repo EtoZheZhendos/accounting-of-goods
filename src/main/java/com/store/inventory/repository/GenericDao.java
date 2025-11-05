@@ -73,7 +73,7 @@ public abstract class GenericDao<T, ID> {
     public Optional<T> findById(ID id) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             T entity = session.get(entityClass, id);
-            return Optional.ofnullable(entity);
+            return Optional.ofNullable(entity);
         } catch (Exception e) {
             logger.error("Ошибка при поиске сущности по ID: {}", id, e);
             throw new RuntimeException("Ошибка при поиске: " + e.getMessage(), e);

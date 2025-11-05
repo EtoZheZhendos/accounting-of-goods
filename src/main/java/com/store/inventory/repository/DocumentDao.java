@@ -12,16 +12,27 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * DAO для работы с документами
+ * DAO для работы с документами движения товаров
+ * 
+ * <p>Предоставляет методы доступа к данным документов.
+ * Расширяет базовый GenericDao методами поиска по номеру, типу, статусу,
+ * дате, складу и различным комбинациям этих параметров.</p>
  */
 public class DocumentDao extends GenericDao<Document, Long> {
 
+    /**
+     * Создает экземпляр DAO для работы с документами
+     */
     public DocumentDao() {
         super(Document.class);
     }
 
     /**
-     * Найти документ по номеру
+     * Находит документ по уникальному номеру
+     * 
+     * @param documentNumber номер документа
+     * @return Optional с найденным документом или пустой Optional
+     * @throws RuntimeException если произошла ошибка при поиске
      */
     public Optional<Document> findByDocumentNumber(String documentNumber) {
         try (Session session = getSession()) {
@@ -36,7 +47,13 @@ public class DocumentDao extends GenericDao<Document, Long> {
     }
 
     /**
-     * Найти документы по типу
+     * Возвращает список документов указанного типа
+     * 
+     * <p>Результаты сортируются по дате и номеру документа в обратном порядке.</p>
+     * 
+     * @param documentType тип документа
+     * @return список документов указанного типа
+     * @throws RuntimeException если произошла ошибка при поиске
      */
     public List<Document> findByType(DocumentType documentType) {
         try (Session session = getSession()) {
@@ -51,7 +68,13 @@ public class DocumentDao extends GenericDao<Document, Long> {
     }
 
     /**
-     * Найти документы по статусу
+     * Возвращает список документов с указанным статусом
+     * 
+     * <p>Результаты сортируются по дате документа в обратном порядке.</p>
+     * 
+     * @param status статус документа
+     * @return список документов с указанным статусом
+     * @throws RuntimeException если произошла ошибка при поиске
      */
     public List<Document> findByStatus(DocumentStatus status) {
         try (Session session = getSession()) {
@@ -66,7 +89,15 @@ public class DocumentDao extends GenericDao<Document, Long> {
     }
 
     /**
-     * Найти документы за период
+     * Возвращает список документов за указанный период
+     * 
+     * <p>Включает документы с датой от startDate до endDate включительно.
+     * Результаты сортируются по дате документа в обратном порядке.</p>
+     * 
+     * @param startDate начальная дата периода
+     * @param endDate конечная дата периода
+     * @return список документов за период
+     * @throws RuntimeException если произошла ошибка при поиске
      */
     public List<Document> findByDateRange(LocalDate startDate, LocalDate endDate) {
         try (Session session = getSession()) {
@@ -82,7 +113,13 @@ public class DocumentDao extends GenericDao<Document, Long> {
     }
 
     /**
-     * Найти документы по складу
+     * Возвращает список документов, связанных с указанным складом
+     * 
+     * <p>Результаты сортируются по дате документа в обратном порядке.</p>
+     * 
+     * @param warehouse склад
+     * @return список документов склада
+     * @throws RuntimeException если произошла ошибка при поиске
      */
     public List<Document> findByWarehouse(Warehouse warehouse) {
         try (Session session = getSession()) {
@@ -97,7 +134,14 @@ public class DocumentDao extends GenericDao<Document, Long> {
     }
 
     /**
-     * Найти документы по типу и статусу
+     * Возвращает список документов указанного типа и статуса
+     * 
+     * <p>Результаты сортируются по дате документа в обратном порядке.</p>
+     * 
+     * @param type тип документа
+     * @param status статус документа
+     * @return список документов с указанным типом и статусом
+     * @throws RuntimeException если произошла ошибка при поиске
      */
     public List<Document> findByTypeAndStatus(DocumentType type, DocumentStatus status) {
         try (Session session = getSession()) {
@@ -112,4 +156,3 @@ public class DocumentDao extends GenericDao<Document, Long> {
         }
     }
 }
-

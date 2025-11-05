@@ -8,16 +8,29 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * DAO для работы с историей операций
+ * DAO для работы с историей операций с товарами
+ * 
+ * <p>Предоставляет методы доступа к данным истории операций.
+ * Расширяет базовый GenericDao методами поиска по товарной позиции,
+ * документу, типу операции, периоду и полке.</p>
  */
 public class HistoryDao extends GenericDao<History, Long> {
 
+    /**
+     * Создает экземпляр DAO для работы с историей операций
+     */
     public HistoryDao() {
         super(History.class);
     }
 
     /**
-     * Получить историю по товарной позиции
+     * Возвращает историю операций для указанной товарной позиции
+     * 
+     * <p>Результаты сортируются по дате операции в обратном порядке.</p>
+     * 
+     * @param item товарная позиция
+     * @return список записей истории товарной позиции
+     * @throws RuntimeException если произошла ошибка при получении истории
      */
     public List<History> findByItem(Item item) {
         try (Session session = getSession()) {
@@ -32,7 +45,13 @@ public class HistoryDao extends GenericDao<History, Long> {
     }
 
     /**
-     * Получить историю по документу
+     * Возвращает историю операций для указанного документа
+     * 
+     * <p>Результаты сортируются по дате операции в прямом порядке.</p>
+     * 
+     * @param document документ
+     * @return список записей истории документа
+     * @throws RuntimeException если произошла ошибка при получении истории
      */
     public List<History> findByDocument(Document document) {
         try (Session session = getSession()) {
@@ -47,7 +66,13 @@ public class HistoryDao extends GenericDao<History, Long> {
     }
 
     /**
-     * Получить историю по типу операции
+     * Возвращает историю операций указанного типа
+     * 
+     * <p>Результаты сортируются по дате операции в обратном порядке.</p>
+     * 
+     * @param operationType тип операции
+     * @return список записей истории с указанным типом операции
+     * @throws RuntimeException если произошла ошибка при получении истории
      */
     public List<History> findByOperationType(OperationType operationType) {
         try (Session session = getSession()) {
@@ -62,7 +87,15 @@ public class HistoryDao extends GenericDao<History, Long> {
     }
 
     /**
-     * Получить историю за период
+     * Возвращает историю операций за указанный период
+     * 
+     * <p>Включает операции с датой от startDate до endDate включительно.
+     * Результаты сортируются по дате операции в обратном порядке.</p>
+     * 
+     * @param startDate начальная дата и время периода
+     * @param endDate конечная дата и время периода
+     * @return список записей истории за период
+     * @throws RuntimeException если произошла ошибка при получении истории
      */
     public List<History> findByDateRange(LocalDateTime startDate, LocalDateTime endDate) {
         try (Session session = getSession()) {
@@ -78,7 +111,14 @@ public class HistoryDao extends GenericDao<History, Long> {
     }
 
     /**
-     * Получить историю перемещений с/на полку
+     * Возвращает историю операций, связанных с указанной полкой
+     * 
+     * <p>Включает операции, где полка является источником (fromShelf)
+     * или приемником (toShelf). Результаты сортируются по дате операции в обратном порядке.</p>
+     * 
+     * @param shelf полка
+     * @return список записей истории, связанных с полкой
+     * @throws RuntimeException если произошла ошибка при получении истории
      */
     public List<History> findByShelf(Shelf shelf) {
         try (Session session = getSession()) {
@@ -92,4 +132,3 @@ public class HistoryDao extends GenericDao<History, Long> {
         }
     }
 }
-

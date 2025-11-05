@@ -12,15 +12,29 @@ import java.util.List;
 
 /**
  * DAO для работы с товарными позициями
+ * 
+ * <p>Предоставляет методы доступа к данным товарных позиций.
+ * Расширяет базовый GenericDao методами поиска по номенклатуре, статусу,
+ * полке, партии, а также специализированными методами для получения остатков,
+ * просроченных и скоро просрочивающихся товаров.</p>
  */
 public class ItemDao extends GenericDao<Item, Long> {
 
+    /**
+     * Создает экземпляр DAO для работы с товарными позициями
+     */
     public ItemDao() {
         super(Item.class);
     }
 
     /**
-     * Найти товары по номенклатуре
+     * Возвращает список товарных позиций указанной номенклатуры
+     * 
+     * <p>Результаты сортируются по дате создания в обратном порядке.</p>
+     * 
+     * @param nomenclature номенклатура товара
+     * @return список товарных позиций номенклатуры
+     * @throws RuntimeException если произошла ошибка при поиске
      */
     public List<Item> findByNomenclature(Nomenclature nomenclature) {
         try (Session session = getSession()) {
@@ -35,7 +49,13 @@ public class ItemDao extends GenericDao<Item, Long> {
     }
 
     /**
-     * Найти товары по статусу
+     * Возвращает список товарных позиций с указанным статусом
+     * 
+     * <p>Результаты сортируются по дате создания в обратном порядке.</p>
+     * 
+     * @param status статус товарной позиции
+     * @return список товарных позиций с указанным статусом
+     * @throws RuntimeException если произошла ошибка при поиске
      */
     public List<Item> findByStatus(ItemStatus status) {
         try (Session session = getSession()) {
@@ -50,7 +70,13 @@ public class ItemDao extends GenericDao<Item, Long> {
     }
 
     /**
-     * Найти товары на полке
+     * Возвращает список товарных позиций на указанной полке
+     * 
+     * <p>Результаты сортируются по названию номенклатуры.</p>
+     * 
+     * @param shelf полка
+     * @return список товарных позиций на полке
+     * @throws RuntimeException если произошла ошибка при поиске
      */
     public List<Item> findByShelf(Shelf shelf) {
         try (Session session = getSession()) {
@@ -65,7 +91,13 @@ public class ItemDao extends GenericDao<Item, Long> {
     }
 
     /**
-     * Найти товары по номеру партии
+     * Возвращает список товарных позиций из указанной партии
+     * 
+     * <p>Результаты сортируются по дате создания в обратном порядке.</p>
+     * 
+     * @param batchNumber номер партии
+     * @return список товарных позиций из партии
+     * @throws RuntimeException если произошла ошибка при поиске
      */
     public List<Item> findByBatchNumber(String batchNumber) {
         try (Session session = getSession()) {
@@ -80,7 +112,15 @@ public class ItemDao extends GenericDao<Item, Long> {
     }
 
     /**
-     * Получить общее количество товара по номенклатуре и статусу
+     * Возвращает общее количество товара по номенклатуре и статусу
+     * 
+     * <p>Суммирует количество всех товарных позиций указанной номенклатуры
+     * с указанным статусом. Если товаров нет, возвращает 0.</p>
+     * 
+     * @param nomenclature номенклатура товара
+     * @param status статус товарной позиции
+     * @return общее количество товара
+     * @throws RuntimeException если произошла ошибка при подсчёте
      */
     public BigDecimal getTotalQuantityByNomenclatureAndStatus(Nomenclature nomenclature, ItemStatus status) {
         try (Session session = getSession()) {
@@ -96,8 +136,14 @@ public class ItemDao extends GenericDao<Item, Long> {
     }
     
     /**
-     * Получить остатки товаров с разбивкой по складам
-     * @return список объектов [nomenclature, warehouse, quantity]
+     * Возвращает остатки товаров с разбивкой по складам
+     * 
+     * <p>Для каждой комбинации номенклатура-склад возвращает суммарное количество
+     * товаров в статусе IN_STOCK. Результаты сортируются по артикулу номенклатуры
+     * и названию склада.</p>
+     * 
+     * @return список массивов объектов [nomenclature, warehouse, quantity]
+     * @throws RuntimeException если произошла ошибка при получении остатков
      */
     public List<Object[]> getStockByWarehouse() {
         try (Session session = getSession()) {
@@ -119,7 +165,13 @@ public class ItemDao extends GenericDao<Item, Long> {
     }
 
     /**
-     * Получить просроченные товары
+     * Возвращает список просроченных товаров
+     * 
+     * <p>Включает товары в статусе IN_STOCK, у которых срок годности истёк.
+     * Результаты сортируются по дате истечения срока годности.</p>
+     * 
+     * @return список просроченных товаров
+     * @throws RuntimeException если произошла ошибка при поиске
      */
     public List<Item> findExpiredItems() {
         try (Session session = getSession()) {
@@ -133,7 +185,15 @@ public class ItemDao extends GenericDao<Item, Long> {
     }
 
     /**
-     * Получить товары, срок годности которых истекает скоро
+     * Возвращает список товаров, срок годности которых скоро истекает
+     * 
+     * <p>Включает товары в статусе IN_STOCK, у которых срок годности истекает
+     * в течение указанного количества дней. Результаты сортируются
+     * по дате истечения срока годности.</p>
+     * 
+     * @param daysBeforeExpiry количество дней до истечения срока
+     * @return список товаров с истекающим сроком годности
+     * @throws RuntimeException если произошла ошибка при поиске
      */
     public List<Item> findExpiringItems(int daysBeforeExpiry) {
         try (Session session = getSession()) {
@@ -155,7 +215,17 @@ public class ItemDao extends GenericDao<Item, Long> {
     }
 
     /**
-     * Найти доступные товары по номенклатуре и складу
+     * Возвращает список доступных товаров по номенклатуре и складу
+     * 
+     * <p>Включает только товары в статусе IN_STOCK с количеством больше нуля,
+     * расположенные на указанном складе. Использует EAGER fetch для номенклатуры,
+     * полки и склада для предотвращения LazyInitializationException.
+     * Результаты сортируются по дате создания (FIFO).</p>
+     * 
+     * @param nomenclature номенклатура товара
+     * @param warehouse склад
+     * @return список доступных товарных позиций
+     * @throws RuntimeException если произошла ошибка при поиске
      */
     public List<Item> findAvailableByNomenclatureAndWarehouse(Nomenclature nomenclature, com.store.inventory.domain.Warehouse warehouse) {
         try (Session session = getSession()) {
@@ -180,4 +250,3 @@ public class ItemDao extends GenericDao<Item, Long> {
         }
     }
 }
-

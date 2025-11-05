@@ -9,16 +9,30 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * DAO для работы с полками
+ * DAO для работы с полками складов
+ * 
+ * <p>Предоставляет методы доступа к данным полок.
+ * Расширяет базовый GenericDao методами поиска по складу и коду,
+ * а также получения списков активных полок.</p>
  */
 public class ShelfDao extends GenericDao<Shelf, Long> {
 
+    /**
+     * Создает экземпляр DAO для работы с полками
+     */
     public ShelfDao() {
         super(Shelf.class);
     }
 
     /**
-     * Найти полку по коду на складе
+     * Находит полку по складу и уникальному коду
+     * 
+     * <p>Код полки уникален в пределах одного склада.</p>
+     * 
+     * @param warehouse склад
+     * @param code код полки
+     * @return Optional с найденной полкой или пустой Optional
+     * @throws RuntimeException если произошла ошибка при поиске
      */
     public Optional<Shelf> findByWarehouseAndCode(Warehouse warehouse, String code) {
         try (Session session = getSession()) {
@@ -34,7 +48,13 @@ public class ShelfDao extends GenericDao<Shelf, Long> {
     }
 
     /**
-     * Получить все полки склада
+     * Возвращает список всех полок указанного склада
+     * 
+     * <p>Результаты сортируются по коду полки.</p>
+     * 
+     * @param warehouse склад
+     * @return список всех полок склада
+     * @throws RuntimeException если произошла ошибка при получении списка
      */
     public List<Shelf> findByWarehouse(Warehouse warehouse) {
         try (Session session = getSession()) {
@@ -49,7 +69,13 @@ public class ShelfDao extends GenericDao<Shelf, Long> {
     }
 
     /**
-     * Получить активные полки склада
+     * Возвращает список активных полок указанного склада
+     * 
+     * <p>Результаты сортируются по коду полки.</p>
+     * 
+     * @param warehouse склад
+     * @return список активных полок склада
+     * @throws RuntimeException если произошла ошибка при получении списка
      */
     public List<Shelf> findActiveByWarehouse(Warehouse warehouse) {
         try (Session session = getSession()) {
@@ -63,4 +89,3 @@ public class ShelfDao extends GenericDao<Shelf, Long> {
         }
     }
 }
-

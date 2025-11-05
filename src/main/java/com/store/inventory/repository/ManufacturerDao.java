@@ -8,15 +8,26 @@ import java.util.Optional;
 
 /**
  * DAO для работы с производителями
+ * 
+ * <p>Предоставляет методы доступа к данным производителей товаров.
+ * Расширяет базовый GenericDao дополнительными методами поиска
+ * по имени и стране производства.</p>
  */
 public class ManufacturerDao extends GenericDao<Manufacturer, Long> {
 
+    /**
+     * Создает экземпляр DAO для работы с производителями
+     */
     public ManufacturerDao() {
         super(Manufacturer.class);
     }
 
     /**
-     * Найти производителя по имени
+     * Находит производителя по точному совпадению имени
+     * 
+     * @param name имя производителя
+     * @return Optional с найденным производителем или пустой Optional
+     * @throws RuntimeException если произошла ошибка при поиске
      */
     public Optional<Manufacturer> findByName(String name) {
         try (Session session = getSession()) {
@@ -31,7 +42,13 @@ public class ManufacturerDao extends GenericDao<Manufacturer, Long> {
     }
 
     /**
-     * Получить производителей по стране
+     * Возвращает список производителей из указанной страны
+     * 
+     * <p>Результаты сортируются по имени производителя.</p>
+     * 
+     * @param country страна производства
+     * @return список производителей из указанной страны
+     * @throws RuntimeException если произошла ошибка при поиске
      */
     public java.util.List<Manufacturer> findByCountry(String country) {
         try (Session session = getSession()) {

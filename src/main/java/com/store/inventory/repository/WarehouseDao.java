@@ -9,15 +9,26 @@ import java.util.Optional;
 
 /**
  * DAO для работы со складами
+ * 
+ * <p>Предоставляет методы доступа к данным складов.
+ * Расширяет базовый GenericDao методами поиска по имени
+ * и получения списка активных складов.</p>
  */
 public class WarehouseDao extends GenericDao<Warehouse, Long> {
 
+    /**
+     * Создает экземпляр DAO для работы со складами
+     */
     public WarehouseDao() {
         super(Warehouse.class);
     }
 
     /**
-     * Найти склад по имени
+     * Находит склад по точному совпадению имени
+     * 
+     * @param name название склада
+     * @return Optional с найденным складом или пустой Optional
+     * @throws RuntimeException если произошла ошибка при поиске
      */
     public Optional<Warehouse> findByName(String name) {
         try (Session session = getSession()) {
@@ -32,7 +43,12 @@ public class WarehouseDao extends GenericDao<Warehouse, Long> {
     }
 
     /**
-     * Получить все активные склады
+     * Возвращает список всех активных складов
+     * 
+     * <p>Результаты сортируются по названию склада.</p>
+     * 
+     * @return список активных складов
+     * @throws RuntimeException если произошла ошибка при получении списка
      */
     public List<Warehouse> findAllActive() {
         try (Session session = getSession()) {
