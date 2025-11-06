@@ -8,47 +8,17 @@
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.store.inventory.controller.MainWindowController">
 
-    <!-- Верхняя панель с меню -->
+    <!-- Верхняя панель с кнопками -->
     <top>
-        <VBox>
-            <MenuBar>
-                <Menu text="Файл">
-                    <MenuItem text="Выход" onAction="#handleExit"/>
-                </Menu>
-                <Menu text="Документы">
-                    <MenuItem text="Поступление товара" onAction="#handleCreateReceiptDocument"/>
-                    <MenuItem text="Реализация товара" onAction="#handleCreateSaleDocument"/>
-                    <MenuItem text="Перемещение товара" onAction="#handleCreateMovementDocument"/>
-                    <MenuItem text="Списание"/>
-                </Menu>
-                <Menu text="Справочники">
-                    <MenuItem text="Номенклатура"/>
-                    <MenuItem text="Производители"/>
-                    <MenuItem text="Склады"/>
-                    <MenuItem text="Полки"/>
-                </Menu>
-                <Menu text="Отчёты">
-                    <MenuItem text="Остатки на складе"/>
-                    <MenuItem text="История операций" onAction="#handleViewHistory"/>
-                    <MenuItem text="Отчёт по продажам"/>
-                    <MenuItem text="Товары с низким запасом"/>
-                </Menu>
-                <Menu text="Помощь">
-                    <MenuItem text="О программе"/>
-                </Menu>
-            </MenuBar>
-
-            <!-- Панель инструментов -->
-            <ToolBar>
-                <Button text="Обновить" onAction="#handleRefresh"/>
-                <Separator orientation="VERTICAL"/>
-                <Button text="Поступление" onAction="#handleCreateReceiptDocument"/>
-                <Button text="Реализация" onAction="#handleCreateSaleDocument"/>
-                <Button text="Перемещение" onAction="#handleCreateMovementDocument"/>
-                <Separator orientation="VERTICAL"/>
-                <Button text="Отчёты"/>
-            </ToolBar>
-        </VBox>
+        <ToolBar>
+            <Button text="Обновить" onAction="#handleRefresh"/>
+            <Separator orientation="VERTICAL"/>
+            <Button text="Поступление" onAction="#handleCreateReceiptDocument"/>
+            <Button text="Реализация" onAction="#handleCreateSaleDocument"/>
+            <Button text="Перемещение" onAction="#handleCreateMovementDocument"/>
+            <Separator orientation="VERTICAL"/>
+            <Button text="Отчёты"/>
+        </ToolBar>
     </top>
 
     <!-- Центральная часть с вкладками -->

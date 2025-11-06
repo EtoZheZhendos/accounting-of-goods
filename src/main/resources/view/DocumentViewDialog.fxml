@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.store.inventory.controller.DocumentViewDialogController"
+      spacing="15" styleClass="dialog-content">
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <!-- Заголовок -->
+    <Label fx:id="titleLabel" text="Просмотр документа" styleClass="dialog-title"/>
+
+    <!-- Информация о документе -->
+    <GridPane hgap="15" vgap="10">
+        <columnConstraints>
+            <ColumnConstraints minWidth="150" prefWidth="150"/>
+            <ColumnConstraints minWidth="350" prefWidth="350" hgrow="ALWAYS"/>
+        </columnConstraints>
+
+        <Label text="Номер документа:" GridPane.rowIndex="0" GridPane.columnIndex="0" styleClass="field-label"/>
+        <TextField fx:id="documentNumberField" editable="false" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+        <Label text="Тип документа:" GridPane.rowIndex="1" GridPane.columnIndex="0" styleClass="field-label"/>
+        <TextField fx:id="documentTypeField" editable="false" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+        <Label text="Дата документа:" GridPane.rowIndex="2" GridPane.columnIndex="0" styleClass="field-label"/>
+        <TextField fx:id="documentDateField" editable="false" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+        <Label text="Склад:" GridPane.rowIndex="3" GridPane.columnIndex="0" styleClass="field-label"/>
+        <TextField fx:id="warehouseField" editable="false" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+        <Label text="Контрагент:" GridPane.rowIndex="4" GridPane.columnIndex="0" styleClass="field-label"/>
+        <TextField fx:id="counterpartyField" editable="false" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+        <Label text="Статус:" GridPane.rowIndex="5" GridPane.columnIndex="0" styleClass="field-label"/>
+        <TextField fx:id="statusField" editable="false" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+
+        <Label text="Общая сумма:" GridPane.rowIndex="6" GridPane.columnIndex="0" styleClass="field-label"/>
+        <TextField fx:id="totalAmountField" editable="false" GridPane.rowIndex="6" GridPane.columnIndex="1"/>
+    </GridPane>
+
+    <Separator/>
+
+    <!-- Позиции документа -->
+    <Label text="Позиции документа:" styleClass="section-label"/>
+    
+    <TableView fx:id="itemsTable" VBox.vgrow="ALWAYS" minHeight="300">
+        <columns>
+            <TableColumn fx:id="itemArticleCol" text="Артикул" prefWidth="120"/>
+            <TableColumn fx:id="itemNameCol" text="Наименование" prefWidth="250"/>
+            <TableColumn fx:id="itemQuantityCol" text="Количество" prefWidth="100"/>
+            <TableColumn fx:id="itemUnitCol" text="Ед. изм." prefWidth="80"/>
+            <TableColumn fx:id="itemPriceCol" text="Цена" prefWidth="100"/>
+            <TableColumn fx:id="itemTotalCol" text="Сумма" prefWidth="120"/>
+            <TableColumn fx:id="itemShelfCol" text="Полка" prefWidth="100"/>
+        </columns>
+    </TableView>
+
+    <!-- Примечания -->
+    <Label text="Примечания:" styleClass="field-label"/>
+    <TextArea fx:id="notesArea" editable="false" prefRowCount="3" wrapText="true"/>
+
+    <!-- Кнопки -->
+    <HBox spacing="10" alignment="CENTER_RIGHT">
+        <Button text="Закрыть" onAction="#handleClose" defaultButton="true"/>
+    </HBox>
+</VBox>
+

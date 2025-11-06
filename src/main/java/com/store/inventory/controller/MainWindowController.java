@@ -6,8 +6,13 @@ import com.store.inventory.service.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -602,7 +607,10 @@ public class MainWindowController {
     }
 
     /**
-     * Открыть выбранный документ
+     * Открыть выбранный документ для просмотра
+     * 
+     * <p>Открывает диалоговое окно с полной информацией о документе,
+     * включая все позиции (товары) в документе.</p>
      */
     @FXML
     public void handleOpenDocument() {
@@ -612,14 +620,30 @@ public class MainWindowController {
             return;
         }
 
-        showInfo("Просмотр документа", 
-            String.format("Документ: %s\nТип: %s\nДата: %s\nСтатус: %s\nСумма: %.2f руб.",
-                selected.getDocumentNumber(),
-                translateDocumentType(selected.getDocumentType()),
-                selected.getDocumentDate(),
-                translateDocumentStatus(selected.getStatus()),
-                selected.getTotalAmount()
-            ));
+        try {
+            FXMLLoader loader = new FXMLLoader();
+            loader.setLocation(getClass().getResource("/view/DocumentViewDialog.fxml"));
+            VBox dialogContent = loader.load();
+
+            DocumentViewDialogController controller = loader.getController();
+            controller.setDocument(selected);
+
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Просмотр документа");
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(documentTable.getScene().getWindow());
+
+            Scene scene = new Scene(dialogContent);
+            scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+            dialogStage.setScene(scene);
+            dialogStage.setMinWidth(850);
+            dialogStage.setMinHeight(600);
+
+            dialogStage.showAndWait();
+        } catch (Exception e) {
+            showError("Ошибка", "Ошибка при открытии документа: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     /**

@@ -6,7 +6,11 @@ import com.store.inventory.repository.ManufacturerDao;
 import com.store.inventory.repository.NomenclatureDao;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -128,6 +132,58 @@ public class NomenclatureDialogController {
         } catch (Exception e) {
             logger.error("Ошибка при сохранении номенклатуры", e);
             showError("Ошибка сохранения", "Не удалось сохранить номенклатуру: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Обработчик кнопки "Добавить производителя"
+     * 
+     * <p>Открывает диалог создания нового производителя.
+     * После создания производитель автоматически выбирается в списке.</p>
+     */
+    @FXML
+    private void handleAddManufacturer() {
+        try {
+            FXMLLoader loader = new FXMLLoader();
+            loader.setLocation(getClass().getResource("/view/ManufacturerDialog.fxml"));
+            VBox dialogContent = loader.load();
+
+            ManufacturerDialogController controller = loader.getController();
+
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("Добавление производителя");
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(manufacturerCombo.getScene().getWindow());
+
+            Scene scene = new Scene(dialogContent);
+            scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+            dialogStage.setScene(scene);
+            dialogStage.setResizable(false);
+
+            dialogStage.showAndWait();
+
+            // Если производитель был создан, обновляем список
+            if (controller.isSaved()) {
+                Manufacturer currentSelection = manufacturerCombo.getValue();
+                loadManufacturers();
+                
+                // Пытаемся найти только что созданного производителя и выбрать его
+                Manufacturer newManufacturer = manufacturerCombo.getItems().stream()
+                    .filter(m -> !manufacturerCombo.getItems().contains(m) || 
+                                 (currentSelection == null && m != null))
+                    .findFirst()
+                    .orElse(null);
+                
+                // Если не нашли, выбираем последнего в списке (самый новый)
+                if (newManufacturer == null && !manufacturerCombo.getItems().isEmpty()) {
+                    newManufacturer = manufacturerCombo.getItems().get(manufacturerCombo.getItems().size() - 1);
+                }
+                
+                manufacturerCombo.setValue(newManufacturer);
+            }
+        } catch (Exception e) {
+            logger.error("Ошибка при открытии диалога производителя", e);
+            showError("Ошибка", "Не удалось открыть диалог добавления производителя: " + e.getMessage());
         }
     }
 

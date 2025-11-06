@@ -44,8 +44,16 @@
 
         <!-- Производитель -->
         <Label text="Производитель:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
-        <ComboBox fx:id="manufacturerCombo" prefWidth="400" 
-                  GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+        <HBox spacing="5" GridPane.rowIndex="4" GridPane.columnIndex="1">
+            <ComboBox fx:id="manufacturerCombo" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+            <Button text="+" onAction="#handleAddManufacturer" 
+                    prefWidth="35" prefHeight="25" 
+                    styleClass="add-button">
+                <tooltip>
+                    <Tooltip text="Добавить нового производителя"/>
+                </tooltip>
+            </Button>
+        </HBox>
 
         <!-- Минимальный запас -->
         <Label text="Мин. запас:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
